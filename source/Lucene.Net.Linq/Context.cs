@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Common.Logging;
 using Lucene.Net.Index;
+using Lucene.Net.Linq.Util;
+using Microsoft.Extensions.Logging;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 
@@ -10,7 +11,7 @@ namespace Lucene.Net.Linq
 {
     internal class Context : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger<Context>();
+        private static readonly ILogger Log = Logging.CreateLogger<Context>();
 
         public event EventHandler<SearcherLoadEventArgs> SearcherLoading;
 
@@ -42,7 +43,7 @@ namespace Lucene.Net.Linq
 
                 if (!tracker.TryDispose())
                 {
-                    Log.Warn(m => m("Context is being disposed before all handles were released."));
+                    Log.LogWarning("Context is being disposed before all handles were released.");
                 }
 
                 tracker = null;
@@ -72,7 +73,7 @@ namespace Lucene.Net.Linq
             lock (reloadLock)
             {
                 AssertNotDisposed();
-                Log.Info(m => m("Reloading index."));
+                Log.LogInformation("Reloading index.");
 
                 IndexSearcher searcher;
                 if (reader == null)
@@ -91,7 +92,7 @@ namespace Lucene.Net.Linq
 
                 if (tmpHandler != null)
                 {
-                    Log.Debug(m => m("Invoking SearcherLoading event."));
+                    Log.LogDebug("Invoking SearcherLoading event.");
                     tmpHandler(this, new SearcherLoadEventArgs(newTracker.Searcher));
                 }
 
@@ -106,7 +107,7 @@ namespace Lucene.Net.Linq
                 }
             }
 
-            Log.Debug(m => m("Index reloading completed."));
+            Log.LogDebug("Index reloading completed.");
         }
 
         internal SearcherClientTracker CurrentTracker

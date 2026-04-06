@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using Common.Logging;
 using Lucene.Net.Documents;
 using Lucene.Net.Linq.Mapping;
 using Lucene.Net.Linq.ScalarResultHandlers;
 using Lucene.Net.Linq.Search.Function;
 using Lucene.Net.Linq.Transformation;
 using Lucene.Net.Linq.Translation;
+using Lucene.Net.Linq.Util;
 using Lucene.Net.Search;
+using Microsoft.Extensions.Logging;
 using Remotion.Linq;
 using Remotion.Linq.Clauses;
 using Remotion.Linq.Parsing.ExpressionVisitors;
@@ -96,7 +97,7 @@ namespace Lucene.Net.Linq
 
     internal abstract class LuceneQueryExecutorBase<TDocument> : IQueryExecutor, IFieldMappingInfoProvider
     {
-        private readonly ILog Log = LogManager.GetLogger(typeof(LuceneQueryExecutorBase<>));
+        private readonly ILogger Log = Logging.CreateLogger(typeof(LuceneQueryExecutorBase<>));
 
         private readonly Context context;
         
@@ -294,7 +295,7 @@ namespace Lucene.Net.Linq
             var builder = new QueryModelTranslator(this, context);
             builder.Build(queryModel);
             
-            Log.Debug(m => m("Lucene query: {0}", builder.Model));
+            Log.LogDebug("Lucene query: {Model}", builder.Model);
 
             return builder.Model;
         }

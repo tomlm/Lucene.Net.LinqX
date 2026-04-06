@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Common.Logging;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Linq.Abstractions;
 using Lucene.Net.Linq.Analysis;
 using Lucene.Net.Linq.Mapping;
+using Lucene.Net.Linq.Util;
 using Lucene.Net.Search;
+using Microsoft.Extensions.Logging;
 using Lucene.Net.Store;
 using Remotion.Linq.Parsing.Structure;
 using Version = Lucene.Net.Util.Version;
@@ -38,7 +39,7 @@ namespace Lucene.Net.Linq
     /// </summary>
     public class LuceneDataProvider : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger<LuceneDataProvider>();
+        private static readonly ILogger Log = Logging.CreateLogger<LuceneDataProvider>();
 
         private readonly Directory directory;
         private readonly Analyzer externalAnalyzer;
@@ -376,13 +377,13 @@ namespace Lucene.Net.Linq
         {
             context.SearcherLoading += (s, e) =>
             {
-                Log.Trace(m => m("Invoking cache warming callback " + lookup));
+                Log.LogTrace("Invoking cache warming callback {Lookup}", lookup);
 
                 var warmupContext = new WarmUpContext(context, e.IndexSearcher);
                 var queryable = CreateQueryable(lookup, warmupContext, documentMapper);
                 callback(queryable);
 
-                Log.Trace(m => m("Callback {0} completed.", lookup));
+                Log.LogTrace("Callback {Lookup} completed.", lookup);
             };
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Core;
 using Lucene.Net.Linq.Mapping;
 using NUnit.Framework;
 

@@ -8,7 +8,9 @@
       "Read(//tmp/**)",
       "Bash(dotnet nuget:*)",
       "Bash(dotnet exec:*)",
-      "Bash(dotnet-script --version)"
+      "Bash(dotnet-script --version)",
+      "Bash(grep -oE \"Tests[\\\\\\\\/][^:]+\\\\.cs\")",
+      "Bash(rm:*)"
     ]
   }
 }

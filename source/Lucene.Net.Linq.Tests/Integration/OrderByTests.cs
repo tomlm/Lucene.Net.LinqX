@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Core;
+using Lucene.Net.Linq.Analysis;
 using NUnit.Framework;
 using Version = System.Version;
 
@@ -18,7 +20,8 @@ namespace Lucene.Net.Linq.Tests.Integration
 
         protected override Analyzer GetAnalyzer(Net.Util.Version version)
         {
-            var a = new PerFieldAnalyzerWrapper(base.GetAnalyzer(version));
+            // Stage 5 port: see AllowSpecialCharactersTests.GetAnalyzer.
+            var a = new PerFieldAnalyzer(base.GetAnalyzer(version));
             a.AddAnalyzer("Version", new KeywordAnalyzer());
             a.AddAnalyzer("Flag", new KeywordAnalyzer());
             return a;

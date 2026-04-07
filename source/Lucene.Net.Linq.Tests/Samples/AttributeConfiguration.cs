@@ -54,7 +54,9 @@ namespace Sample
     [TestFixture]
     public class AttributeConfiguration
     {
-        public static void Main()
+        // Renamed from "Main" to avoid clashing with the test host's
+        // entry point under SDK-style projects.
+        public static void RunSample()
         {
             var directory = new RAMDirectory();
 
@@ -88,7 +90,7 @@ namespace Sample
         [Test, Explicit]
         public void RunMain()
         {
-            Main();
+            RunSample();
         }
     }
 

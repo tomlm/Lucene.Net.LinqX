@@ -168,7 +168,7 @@ namespace Lucene.Net.Linq.Tests.Mapping
             var mapper = new ReflectionDocumentMapper<ReflectedDocumentWithReadOnlyKey>(LuceneVersion.LUCENE_30);
             mapper.ToDocument(new ReflectedDocumentWithReadOnlyKey { Id = "a" }, document);
 
-            Assert.That(document.GetField("Type").StringValue, Is.EqualTo("ReflectedDocumentWithReadOnlyKey"));
+            Assert.That(document.GetField("Type").GetStringValue(), Is.EqualTo("ReflectedDocumentWithReadOnlyKey"));
         }
 
         [Test]

@@ -1,5 +1,6 @@
 ﻿using System;
 using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Core;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Linq.Analysis;
 using Lucene.Net.Linq.Mapping;

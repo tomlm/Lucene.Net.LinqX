@@ -22,7 +22,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         [Test]
         public void Stage0_Transform()
         {
-            var methodInfo = ReflectionUtility.GetMethod(() => LuceneMethods.Boost<string>(null, 0f));
+            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => LuceneMethods.Boost<string>(null, 0f));
             var fieldExpression = new LuceneQueryFieldExpression(typeof (string), "Name");
             const float boostAmount = 5.5f;
 
@@ -32,14 +32,14 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var result = visitor.VisitExpression(call);
 
             Assert.That(result, Is.SameAs(fieldExpression));
-            Assert.That(((LuceneQueryFieldExpression)result).Boost, Is.EqualTo(boostAmount));
+            Assert.That(((LuceneQueryFieldExpression)result).FieldBoost, Is.EqualTo(boostAmount));
         }
 
         [Test]
         public void Stage1_Transform()
         {
             visitor = new BoostMethodCallTreeVisitor(1);
-            var methodInfo = ReflectionUtility.GetMethod(() => false.Boost(0f));
+            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => false.Boost(0f));
             var fieldExpression = new LuceneQueryFieldExpression(typeof(string), "Name");
             var query = new LuceneQueryPredicateExpression(fieldExpression, Expression.Constant("foo"), Occur.SHOULD);
 
@@ -57,7 +57,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         [Test]
         public void Stage0_IgnoresNonLuceneQueryFieldExpression()
         {
-            var methodInfo = ReflectionUtility.GetMethod(() => LuceneMethods.Boost<string>(null, 0f));
+            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => LuceneMethods.Boost<string>(null, 0f));
 
             // "hello".Boost(5.5)
             var expr = Expression.Call(methodInfo, Expression.Constant("hello"), Expression.Constant(5.5f));
@@ -71,7 +71,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         public void Stage1_ThrowsWhenNotOnQueryField()
         {
             visitor = new BoostMethodCallTreeVisitor(1);
-            var methodInfo = ReflectionUtility.GetMethod(() => LuceneMethods.Boost<string>(null, 0f));
+            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => LuceneMethods.Boost<string>(null, 0f));
 
             // "hello".Boost(5.5)
             var expr = Expression.Call(methodInfo, Expression.Constant("hello"), Expression.Constant(5.5f));
@@ -84,7 +84,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         [Test]
         public void IgnoresUnrelatedMethodCalls()
         {
-            var methodInfo = ReflectionUtility.GetMethod(() => string.IsNullOrEmpty("a"));
+            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => string.IsNullOrEmpty("a"));
 
             var expr = Expression.Call(methodInfo, Expression.Constant("hello"));
 

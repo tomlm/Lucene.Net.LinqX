@@ -38,9 +38,17 @@ namespace Lucene.Net.Linq
         public double RAMBufferSizeMB { get; set; }
 
         /// <summary>
-        /// A function that creates a <see cref="MergePolicy"/> for use with <see cref="IndexWriter"/>.
-        /// Default: <c>null</c>, which causes <see cref="IndexWriter"/> to use its default policy.
+        /// A factory that produces a <see cref="MergePolicy"/> for use with
+        /// <see cref="IndexWriter"/>. Default: <c>null</c>, which causes
+        /// <see cref="IndexWriter"/> to use its default policy.
         /// </summary>
-        public Func<IndexWriter, MergePolicy> MergePolicyBuilder { get; set; }
+        /// <remarks>
+        /// The Lucene 3.x version of this delegate took the in-progress
+        /// <c>IndexWriter</c> as an argument so callers could inspect its
+        /// state. Lucene 4.8 requires the merge policy to be set on the
+        /// <see cref="IndexWriterConfig"/> before the writer is constructed,
+        /// so the writer is no longer available to the factory.
+        /// </remarks>
+        public Func<MergePolicy> MergePolicyBuilder { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Lucene.Net.Linq.Util;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
@@ -9,11 +9,11 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
     /// When combined with <c ref="NoOpMethodCallRemovingTreeVisitor"/> a null-safe
     /// ToLower operation like IFF(x != null, x.ToLower(), null) is simplified to x.
     /// </summary>
-    internal class NullSafetyConditionRemovingTreeVisitor : ExpressionTreeVisitor
+    internal class NullSafetyConditionRemovingTreeVisitor : LuceneExpressionVisitor
     {
-        protected override Expression VisitConditionalExpression(ConditionalExpression expression)
+        protected override Expression VisitConditional(ConditionalExpression expression)
         {
-            var result = base.VisitConditionalExpression(expression);
+            var result = base.VisitConditional(expression);
 
             if (!(result is ConditionalExpression)) return result;
 

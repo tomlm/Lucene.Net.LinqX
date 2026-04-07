@@ -18,7 +18,7 @@ namespace Lucene.Net.Linq.Tests.Integration
             AddDocument(new SampleDocument { Name = "b", Scalar = 2, Flag = true, Version = new Version(3, 0, 0) });
         }
 
-        protected override Analyzer GetAnalyzer(Net.Util.Version version)
+        protected override Analyzer GetAnalyzer(Net.Util.LuceneVersion version)
         {
             // Stage 5 port: see AllowSpecialCharactersTests.GetAnalyzer.
             var a = new PerFieldAnalyzer(base.GetAnalyzer(version));

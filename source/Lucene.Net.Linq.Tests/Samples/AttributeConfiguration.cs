@@ -8,7 +8,7 @@ using Lucene.Net.Linq.Mapping;
 using Lucene.Net.Linq.Tests.Integration;
 using Lucene.Net.Store;
 using NUnit.Framework;
-using Version = Lucene.Net.Util.Version;
+using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Sample
 {

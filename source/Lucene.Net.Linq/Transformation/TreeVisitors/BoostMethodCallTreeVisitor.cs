@@ -9,7 +9,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
     internal class BoostMethodCallTreeVisitor : MethodInfoMatchingTreeVisitor
     {
         private readonly int stage;
-        private static readonly MethodInfo BoostMethod = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => LuceneMethods.Boost<object>(null, 0f));
+        private static readonly MethodInfo BoostMethod = Lucene.Net.Linq.Util.Reflection.MethodOf(() => LuceneMethods.Boost<object>(null, 0f));
 
         internal BoostMethodCallTreeVisitor(int stage)
         {

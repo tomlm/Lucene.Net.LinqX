@@ -14,7 +14,7 @@ namespace Lucene.Net.Linq.Tests.Integration
     {
         private PerFieldAnalyzer analyzer;
 
-        protected override Analyzer GetAnalyzer(Net.Util.Version version)
+        protected override Analyzer GetAnalyzer(Net.Util.LuceneVersion version)
         {
             analyzer = new PerFieldAnalyzer(base.GetAnalyzer(version));
             analyzer.AddAnalyzer<SampleDocument>(t => t.Id, new KeywordAnalyzer());

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Lucene.Net.Analysis;
 using Lucene.Net.Index;
-using Version = Lucene.Net.Util.Version;
+using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq.Mapping
 {

@@ -16,8 +16,8 @@
 
     <!-- Package metadata (moved from .nuspec) -->
     <IsPackable>true</IsPackable>
-    <PackageId>Lucene.Net.Linq</PackageId>
-    <Version>4.0.0-alpha1</Version>
+    <PackageId>Lucene.Net.LinqX</PackageId>
+    <Version>4.8.0-alpha1</Version>
     <Title>Lucene.Net.Linq</Title>
     <Authors>Chris Eldredge</Authors>
     <Owners>The Motley Fool, LLC</Owners>

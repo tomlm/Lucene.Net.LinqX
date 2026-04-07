@@ -10,7 +10,7 @@ using Lucene.Net.Store;
 using NSubstitute;
 using NUnit.Framework;
 using LuceneVersion = Lucene.Net.Util.LuceneVersion;
-using Version = Lucene.Net.Util.Version;
+using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq.Tests
 {
@@ -25,7 +25,7 @@ namespace Lucene.Net.Linq.Tests
         [Test]
         public void OpenSessionWithoutWriterCreatesIndexWhenMissing()
         {
-            var provider = new LuceneDataProvider(new RAMDirectory(), new SimpleAnalyzer(LuceneVersion.LUCENE_48), Version.LUCENE_29);
+            var provider = new LuceneDataProvider(new RAMDirectory(), new SimpleAnalyzer(LuceneVersion.LUCENE_48), Version.LUCENE_48);
 
             TestDelegate call = () => provider.OpenSession<Item>();
 
@@ -35,7 +35,7 @@ namespace Lucene.Net.Linq.Tests
         [Test]
         public void OpenSessionThrowsWhenDocumentMapperDoesNotImplementModificationDetector()
         {
-            var provider = new LuceneDataProvider(new RAMDirectory(), new SimpleAnalyzer(LuceneVersion.LUCENE_48), Version.LUCENE_29);
+            var provider = new LuceneDataProvider(new RAMDirectory(), new SimpleAnalyzer(LuceneVersion.LUCENE_48), Version.LUCENE_48);
 
             TestDelegate call = () => provider.OpenSession(Substitute.For<IDocumentMapper<Item>>());
 
@@ -51,7 +51,7 @@ namespace Lucene.Net.Linq.Tests
             // first AddDocument; an empty commit gives DirectoryReader.Open
             // a segments_* file to work with.
             writer.Commit();
-            var provider = new LuceneDataProvider(directory, new SimpleAnalyzer(LuceneVersion.LUCENE_48), Version.LUCENE_29, writer);
+            var provider = new LuceneDataProvider(directory, new SimpleAnalyzer(LuceneVersion.LUCENE_48), Version.LUCENE_48, writer);
 
             var count = -1;
 

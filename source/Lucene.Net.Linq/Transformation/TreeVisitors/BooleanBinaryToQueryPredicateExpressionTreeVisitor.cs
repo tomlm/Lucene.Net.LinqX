@@ -2,16 +2,16 @@ using System.Linq.Expressions;
 using Lucene.Net.Linq.Clauses.Expressions;
 using Lucene.Net.Linq.Util;
 using Lucene.Net.Search;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
     /// <summary>
     /// Replaces boolean binary expressions like <c>[LuceneQueryPredicateExpression](+field:query) == false</c> to <c>[LuceneQueryPredicateExpression](-field:query)</c>
     /// </summary>
-    internal class BooleanBinaryToQueryPredicateExpressionTreeVisitor : ExpressionTreeVisitor
+    internal class BooleanBinaryToQueryPredicateExpressionTreeVisitor : LuceneExpressionVisitor
     {
-        protected override Expression VisitBinaryExpression(BinaryExpression expression)
+        protected override Expression VisitBinary(BinaryExpression expression)
         {
             var predicate = expression.Left as LuceneQueryPredicateExpression;
 
@@ -19,7 +19,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
 
             if (predicate == null || !(constant || expression.Right.IsFalseConstant()))
             {
-                return base.VisitBinaryExpression(expression);
+                return base.VisitBinary(expression);
             }
 
             if ((expression.NodeType == ExpressionType.Equal && constant) ||

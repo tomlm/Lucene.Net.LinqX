@@ -9,7 +9,7 @@ namespace Lucene.Net.Linq.Tests.Integration
     [TestFixture]
     public class AllowSpecialCharactersTests : IntegrationTestBase
     {
-        protected override Analyzer GetAnalyzer(Net.Util.Version version)
+        protected override Analyzer GetAnalyzer(Net.Util.LuceneVersion version)
         {
             // Stage 5 port: the BCL PerFieldAnalyzerWrapper's AddAnalyzer
             // method was removed in 4.8 (analyzers must now be passed via

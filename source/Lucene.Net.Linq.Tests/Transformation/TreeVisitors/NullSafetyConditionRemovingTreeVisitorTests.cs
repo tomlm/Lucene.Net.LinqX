@@ -27,7 +27,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 X,
                 Null);
 
-            var result = visitor.VisitExpression(condition);
+            var result = visitor.Visit(condition);
 
             Assert.That(result, Is.InstanceOf<ConstantExpression>());
         }
@@ -41,7 +41,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Null,
                 X);
 
-            var result = visitor.VisitExpression(condition);
+            var result = visitor.Visit(condition);
 
             Assert.That(result, Is.InstanceOf<ConstantExpression>());
         }
@@ -55,7 +55,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Null,
                 X);
 
-            var result = visitor.VisitExpression(condition);
+            var result = visitor.Visit(condition);
 
             Assert.That(result, Is.InstanceOf<ConstantExpression>());
         }
@@ -69,7 +69,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Null,
                 X);
 
-            var result = visitor.VisitExpression(condition);
+            var result = visitor.Visit(condition);
 
             Assert.That(result, Is.InstanceOf<ConstantExpression>());
         }
@@ -83,7 +83,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Null,
                 Expression.Constant("x"));
 
-            var result = visitor.VisitExpression(condition);
+            var result = visitor.Visit(condition);
 
             Assert.That(result, Is.InstanceOf<ConstantExpression>());
         }
@@ -97,7 +97,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 X,
                 Y);
 
-            var result = visitor.VisitExpression(condition);
+            var result = visitor.Visit(condition);
 
             Assert.That(result, Is.SameAs(condition), "Should not simplify when false condition returns non-null.");
         }
@@ -111,7 +111,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 X,
                 Null);
 
-            var result = visitor.VisitExpression(condition);
+            var result = visitor.Visit(condition);
 
             Assert.That(result, Is.SameAs(X));
         }
@@ -132,7 +132,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Null,
                 nested);
 
-            var result = visitor.VisitExpression(outer);
+            var result = visitor.Visit(outer);
 
             Assert.That(result, Is.SameAs(concat));
         }
@@ -148,7 +148,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Null,
                 X);
 
-            var result = visitor.VisitExpression(outer);
+            var result = visitor.Visit(outer);
 
             Assert.That(result, Is.SameAs(X));
         }

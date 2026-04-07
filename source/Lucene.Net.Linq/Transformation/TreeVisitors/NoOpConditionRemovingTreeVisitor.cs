@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using Lucene.Net.Linq.Util;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
@@ -9,11 +9,11 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
     /// or "False OrElse Expression" to take only the right side.  Applies
     /// recursively to collapse deeply nested pointless expressions.
     /// </summary>
-    internal class NoOpConditionRemovingTreeVisitor : ExpressionTreeVisitor
+    internal class NoOpConditionRemovingTreeVisitor : LuceneExpressionVisitor
     {
-        protected override Expression VisitBinaryExpression(BinaryExpression expression)
+        protected override Expression VisitBinary(BinaryExpression expression)
         {
-            var result = base.VisitBinaryExpression(expression);
+            var result = base.VisitBinary(expression);
 
             if (result is BinaryExpression)
             {

@@ -29,7 +29,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Expression.Constant(true),
                 predicate);
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
 
             Assert.That(result, Is.SameAs(predicate));
         }
@@ -43,7 +43,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Expression.Constant(false),
                 predicate);
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
 
             Assert.That(result, Is.SameAs(predicate));
         }
@@ -61,7 +61,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Expression.Constant(true),
                 inner);
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
 
             Assert.That(result, Is.SameAs(predicate));
         }

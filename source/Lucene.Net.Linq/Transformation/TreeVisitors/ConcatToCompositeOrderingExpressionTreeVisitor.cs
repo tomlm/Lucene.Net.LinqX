@@ -1,15 +1,15 @@
 ﻿using System.Linq.Expressions;
 using Lucene.Net.Linq.Clauses.Expressions;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
     /// <summary>
     /// Replaces method calls like string.Concat([LuceneQueryFieldExpression], [LuceneQueryFieldExpression]) to LuceneCompositeOrderingExpression
     /// </summary>
-    internal class ConcatToCompositeOrderingExpressionTreeVisitor : ExpressionTreeVisitor
+    internal class ConcatToCompositeOrderingExpressionTreeVisitor : LuceneExpressionVisitor
     {
-        protected override Expression VisitMethodCallExpression(MethodCallExpression expression)
+        protected override Expression VisitMethodCall(MethodCallExpression expression)
         {
             if (expression.Method.Name == "Concat" && expression.Arguments.Count == 2)
             {
@@ -17,7 +17,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
                 return new LuceneCompositeOrderingExpression(fields);
             }
             
-            return base.VisitMethodCallExpression(expression);
+            return base.VisitMethodCall(expression);
         }
     }
 }

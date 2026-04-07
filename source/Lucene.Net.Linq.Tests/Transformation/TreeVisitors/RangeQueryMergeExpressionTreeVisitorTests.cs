@@ -29,7 +29,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var binary = Expression.MakeBinary(ExpressionType.AndAlso, lower, upper);
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.InstanceOf<LuceneRangeQueryExpression>());
         }
@@ -39,7 +39,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var binary = Expression.MakeBinary(ExpressionType.AndAlso, upper, lower);
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.InstanceOf<LuceneRangeQueryExpression>());
             var expr = (LuceneRangeQueryExpression) result;
@@ -57,7 +57,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
 
             var binary = Expression.MakeBinary(ExpressionType.OrElse, lowerLess, upperGreater);
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.InstanceOf<LuceneRangeQueryExpression>());
             var expr = (LuceneRangeQueryExpression)result;
@@ -78,7 +78,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
 
             var binary = Expression.MakeBinary(ExpressionType.OrElse, upperGreater, lowerLess);
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.InstanceOf<LuceneRangeQueryExpression>());
             var expr = (LuceneRangeQueryExpression)result;
@@ -94,7 +94,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var binary = Expression.MakeBinary(ExpressionType.AndAlso, lower, lower);
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.SameAs(binary));
         }
@@ -104,7 +104,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var binary = Expression.MakeBinary(ExpressionType.AndAlso, upper, upper);
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.SameAs(binary));
         }
@@ -114,7 +114,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var binary = Expression.MakeBinary(ExpressionType.AndAlso, lower, Expression.Constant(true));
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.SameAs(binary));
         }
@@ -125,7 +125,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var equal = new LuceneQueryPredicateExpression(new LuceneQueryFieldExpression(typeof(int), "percentile"), Expression.Constant(50), Occur.MUST, QueryType.Default);
             var binary = Expression.MakeBinary(ExpressionType.AndAlso, lower, equal);
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.SameAs(binary));
         }
@@ -136,7 +136,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var otherUpper = new LuceneQueryPredicateExpression(new LuceneQueryFieldExpression(typeof(int), "id"), Expression.Constant(80), Occur.MUST, QueryType.LessThanOrEqual);
             var binary = Expression.MakeBinary(ExpressionType.AndAlso, lower, otherUpper);
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.SameAs(binary));
         }
@@ -146,7 +146,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var binary = Expression.MakeBinary(ExpressionType.OrElse, lower, upper);
 
-            var result = visitor.VisitExpression(binary);
+            var result = visitor.Visit(binary);
 
             Assert.That(result, Is.SameAs(binary));
         }

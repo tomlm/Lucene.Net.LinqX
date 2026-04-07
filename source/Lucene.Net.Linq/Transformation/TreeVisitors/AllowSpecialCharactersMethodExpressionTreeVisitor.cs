@@ -1,16 +1,15 @@
 using System.Linq.Expressions;
 using Lucene.Net.Linq.Clauses.Expressions;
-using Remotion.Linq.Clauses.Expressions;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
-    internal class AllowSpecialCharactersMethodExpressionTreeVisitor : ExpressionTreeVisitor
+    internal class AllowSpecialCharactersMethodExpressionTreeVisitor : LuceneExpressionVisitor
     {
         private bool allowed;
         private LuceneQueryPredicateExpression parent;
 
-        protected override Expression VisitExtensionExpression(ExtensionExpression expression)
+        protected override Expression VisitExtension(Expression expression)
         {
             if (expression is AllowSpecialCharactersExpression)
             {
@@ -22,7 +21,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
                 return VisitQueryPredicateExpression((LuceneQueryPredicateExpression) expression);
             }
 
-            return base.VisitExtensionExpression(expression);
+            return base.VisitExtension(expression);
         }
         
         private Expression VisitAllowSpecialCharactersExpression(AllowSpecialCharactersExpression expression)
@@ -34,7 +33,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
                 parent.AllowSpecialCharacters = true;
             }
 
-            var result = VisitExpression(expression.Pattern);
+            var result = Visit(expression.Pattern);
 
             allowed = false;
 
@@ -45,7 +44,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
         {
             parent = expression;
 
-            var result = base.VisitExtensionExpression(expression);
+            var result = base.VisitExtension(expression);
 
             if (allowed && result is LuceneQueryPredicateExpression)
             {

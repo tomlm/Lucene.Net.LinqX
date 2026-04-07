@@ -1,18 +1,18 @@
 using System;
 using System.Linq.Expressions;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
     /// <summary>
     /// Replaces expressions like <c>(bool)(Constant(bool?))</c> with <c>Constant(bool?)</c>.
     /// </summary>
-    internal class NoOpConvertExpressionRemovingVisitor : ExpressionTreeVisitor
+    internal class NoOpConvertExpressionRemovingVisitor : LuceneExpressionVisitor
     {
-        protected override Expression VisitBinaryExpression(BinaryExpression expression)
+        protected override Expression VisitBinary(BinaryExpression expression)
         {
-            var left = base.VisitExpression(expression.Left);
-            var right = base.VisitExpression(expression.Right);
+            var left = base.Visit(expression.Left);
+            var right = base.Visit(expression.Right);
 
             if (ReferenceEquals(left, expression.Left) && ReferenceEquals(right, expression.Right))
             {
@@ -38,18 +38,18 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
             return Expression.Constant(Convert.ChangeType(constant.Value, type));
         }
 
-        protected override Expression VisitUnaryExpression(UnaryExpression expression)
+        protected override Expression VisitUnary(UnaryExpression expression)
         {
             if (expression.NodeType == ExpressionType.Convert)
             {
                 // Strip the Convert wrapper unconditionally. The shim's
-                // VisitUnaryExpression default rebuilds parent unary nodes
+                // VisitUnary default rebuilds parent unary nodes
                 // via Expression.MakeUnary (without BCL Update validation),
                 // so type-changing rewrites no longer trip ValidateUnary.
-                return base.VisitExpression(expression.Operand);
+                return base.Visit(expression.Operand);
             }
 
-            return base.VisitUnaryExpression(expression);
+            return base.VisitUnary(expression);
         }
     }
 }

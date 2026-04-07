@@ -24,7 +24,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var expression = Expression.MakeBinary(ExpressionType.Modulo, Expression.Constant(10), Expression.Constant(3));
 
-            Assert.That(visitor.VisitExpression(expression), Is.SameAs(expression));
+            Assert.That(visitor.Visit(expression), Is.SameAs(expression));
         }
 
         [Test]
@@ -33,7 +33,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var five = Expression.Constant(5);
             var expression = Expression.MakeBinary(ExpressionType.GreaterThan, five, new LuceneQueryFieldExpression(typeof(int), "Count"));
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Count", five, QueryType.LessThan, Occur.MUST);
         }
 
@@ -43,7 +43,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var five = Expression.Constant(5);
             var expression = Expression.MakeBinary(ExpressionType.LessThan, five, new LuceneQueryFieldExpression(typeof(int), "Count"));
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Count", five, QueryType.GreaterThan, Occur.MUST);
         }
 
@@ -53,7 +53,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var five = Expression.Constant(5);
             var expression = Expression.MakeBinary(ExpressionType.GreaterThanOrEqual, five, new LuceneQueryFieldExpression(typeof(int), "Count"));
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Count", five, QueryType.LessThanOrEqual, Occur.MUST);
         }
 
@@ -63,7 +63,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var five = Expression.Constant(5);
             var expression = Expression.MakeBinary(ExpressionType.LessThanOrEqual, five, new LuceneQueryFieldExpression(typeof(int), "Count"));
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Count", five, QueryType.GreaterThanOrEqual, Occur.MUST);
         }
 
@@ -73,7 +73,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var foo = Expression.Constant("foo");
             var expression = Expression.MakeBinary(ExpressionType.Equal, new LuceneQueryFieldExpression(typeof(string), "Name"), foo);
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Name", foo, QueryType.Default, Occur.MUST);
         }
 
@@ -83,7 +83,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var foo = Expression.Constant("foo");
             var expression = Expression.MakeBinary(ExpressionType.NotEqual, new LuceneQueryFieldExpression(typeof(string), "Name"), foo);
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Name", foo, QueryType.Default, Occur.MUST_NOT);
         }
 
@@ -93,7 +93,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var five = Expression.Constant(5);
             var expression = Expression.MakeBinary(ExpressionType.GreaterThan, new LuceneQueryFieldExpression(typeof(int), "Count"), five);
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Count", five, QueryType.GreaterThan, Occur.MUST);
         }
         
@@ -103,7 +103,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var time = Expression.Constant(new DateTime(2012, 4, 18));
             var expression = Expression.MakeBinary(ExpressionType.GreaterThanOrEqual, new LuceneQueryFieldExpression(typeof(DateTime), "Time"), time);
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Time", time, QueryType.GreaterThanOrEqual, Occur.MUST);
         }
 
@@ -113,7 +113,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var five = Expression.Constant(5);
             var expression = Expression.MakeBinary(ExpressionType.LessThan, new LuceneQueryFieldExpression(typeof(int), "Count"), five);
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Count", five, QueryType.LessThan, Occur.MUST);
         }
 
@@ -123,7 +123,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var five = Expression.Constant(5.125d);
             var expression = Expression.MakeBinary(ExpressionType.LessThanOrEqual, new LuceneQueryFieldExpression(typeof(double), "Average"), five);
 
-            var result = visitor.VisitExpression(expression);
+            var result = visitor.Visit(expression);
             AssertLuceneQueryExpression(result, "Average", five, QueryType.LessThanOrEqual, Occur.MUST);
         }
 
@@ -132,7 +132,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var expression = Expression.MakeBinary(ExpressionType.NotEqual, Expression.Constant("bar"), Expression.Constant("foo"));
 
-            TestDelegate call = () => visitor.VisitExpression(expression);
+            TestDelegate call = () => visitor.Visit(expression);
             Assert.That(call, Throws.Exception.InstanceOf<NotSupportedException>());
         }
 

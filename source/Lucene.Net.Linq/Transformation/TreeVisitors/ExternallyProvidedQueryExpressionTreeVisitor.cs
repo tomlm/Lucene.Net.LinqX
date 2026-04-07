@@ -11,7 +11,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
     /// </summary>
     internal class ExternallyProvidedQueryExpressionTreeVisitor : MethodInfoMatchingTreeVisitor
     {
-        private static readonly MethodInfo MatchesMethod = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => LuceneMethods.Matches<object>(null, null));
+        private static readonly MethodInfo MatchesMethod = Lucene.Net.Linq.Util.Reflection.MethodOf(() => LuceneMethods.Matches<object>(null, null));
 
         internal ExternallyProvidedQueryExpressionTreeVisitor()
         {

@@ -9,7 +9,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
         private Expression parent;
         private bool negate;
 
-        protected override Expression VisitBinaryExpression(BinaryExpression expression)
+        protected override Expression VisitBinary(BinaryExpression expression)
         {
             var oldParent = parent;
 
@@ -17,7 +17,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
 
             try
             {
-                return base.VisitBinaryExpression(expression);
+                return base.VisitBinary(expression);
             }
             finally
             {
@@ -25,16 +25,16 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
             }
         }
 
-        protected override Expression VisitUnaryExpression(UnaryExpression expression)
+        protected override Expression VisitUnary(UnaryExpression expression)
         {
             if (expression.NodeType != ExpressionType.Not || expression.Type != typeof(bool))
             {
-                return base.VisitUnaryExpression(expression);
+                return base.VisitUnary(expression);
             }
 
             negate = !negate;
 
-            var operand = VisitExpression(expression.Operand);
+            var operand = Visit(expression.Operand);
 
             negate = !negate;
 

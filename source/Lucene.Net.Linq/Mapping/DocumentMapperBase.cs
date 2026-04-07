@@ -8,7 +8,7 @@ using Lucene.Net.Documents;
 using Lucene.Net.Linq.Analysis;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
-using Version = Lucene.Net.Util.Version;
+using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq.Mapping
 {

@@ -22,7 +22,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             // "where doc.SomeFlag"
             var expression = new LuceneQueryFieldExpression(typeof (bool), "SomeFlag");
 
-            var result = visitor.VisitExpression(expression) as BinaryExpression;
+            var result = visitor.Visit(expression) as BinaryExpression;
 
             Assert.That(result, Is.Not.Null, "Expected BinaryExpression to be returned.");
             Assert.That(result.Left, Is.SameAs(expression));
@@ -38,7 +38,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var binary = Expression.MakeBinary(ExpressionType.Equal, new LuceneQueryFieldExpression(typeof(string), "Name"), Expression.Constant("foo"));
             var topBinary = Expression.MakeBinary(ExpressionType.AndAlso, flag, binary);
 
-            var result = visitor.VisitExpression(topBinary) as BinaryExpression;
+            var result = visitor.Visit(topBinary) as BinaryExpression;
 
             Assert.That(result, Is.Not.Null, "Expected BinaryExpression to be returned.");
             Assert.That(result.Right, Is.SameAs(binary));
@@ -55,7 +55,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var binary = Expression.MakeBinary(ExpressionType.Equal, new LuceneQueryFieldExpression(typeof(string), "Name"), Expression.Constant("foo"));
             var topBinary = Expression.MakeBinary(ExpressionType.OrElse, binary, flag);
 
-            var result = visitor.VisitExpression(topBinary) as BinaryExpression;
+            var result = visitor.Visit(topBinary) as BinaryExpression;
 
             Assert.That(result, Is.Not.Null, "Expected BinaryExpression to be returned.");
             Assert.That(result.Left, Is.SameAs(binary));
@@ -71,7 +71,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var flag = new LuceneQueryFieldExpression(typeof(bool), "SomeFlag");
             var binary = Expression.MakeBinary(ExpressionType.Equal, flag, Expression.Constant(true));
 
-            var result = (BinaryExpression)visitor.VisitExpression(binary);
+            var result = (BinaryExpression)visitor.Visit(binary);
 
             Assert.That(result, Is.SameAs(binary));
         }
@@ -82,7 +82,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             // "where !doc.SomeFlag"
             var flag = new LuceneQueryFieldExpression(typeof(bool), "SomeFlag");
             var expression = Expression.MakeUnary(ExpressionType.Not, flag, typeof(bool));
-            var result = visitor.VisitExpression(expression) as BinaryExpression;
+            var result = visitor.Visit(expression) as BinaryExpression;
 
             Assert.That(result, Is.Not.Null, "Expected BinaryExpression to be returned.");
             Assert.That(result.Left, Is.SameAs(flag));
@@ -97,7 +97,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var field = new LuceneQueryFieldExpression(typeof(string), "Name");
             var startsWith = Expression.Call(field, "StartsWith", null, Expression.Constant("foo"));
             var expression = Expression.MakeUnary(ExpressionType.Not, startsWith, typeof(bool));
-            var result = visitor.VisitExpression(expression) as BinaryExpression;
+            var result = visitor.Visit(expression) as BinaryExpression;
 
             Assert.That(result, Is.Not.Null, "Expected BinaryExpression to be returned.");
             Assert.That(result.Left, Is.SameAs(startsWith));
@@ -113,7 +113,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var flag = new LuceneQueryFieldExpression(typeof(bool), "SomeFlag");
             var expression = Expression.MakeUnary(ExpressionType.Not, flag, typeof(bool));
             expression = Expression.MakeUnary(ExpressionType.Not, expression, typeof(bool));
-            var result = visitor.VisitExpression(expression) as BinaryExpression;
+            var result = visitor.Visit(expression) as BinaryExpression;
 
             Assert.That(result, Is.Not.Null, "Expected BinaryExpression to be returned.");
             Assert.That(result.Left, Is.SameAs(flag));

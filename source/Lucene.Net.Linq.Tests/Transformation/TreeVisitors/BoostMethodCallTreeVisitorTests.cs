@@ -22,14 +22,14 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         [Test]
         public void Stage0_Transform()
         {
-            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => LuceneMethods.Boost<string>(null, 0f));
+            var methodInfo = Lucene.Net.Linq.Util.Reflection.MethodOf(() => LuceneMethods.Boost<string>(null, 0f));
             var fieldExpression = new LuceneQueryFieldExpression(typeof (string), "Name");
             const float boostAmount = 5.5f;
 
             // LuceneField(Name).Boost(5.5)
             var call = Expression.Call(methodInfo, fieldExpression, Expression.Constant(boostAmount));
             
-            var result = visitor.VisitExpression(call);
+            var result = visitor.Visit(call);
 
             Assert.That(result, Is.SameAs(fieldExpression));
             Assert.That(((LuceneQueryFieldExpression)result).FieldBoost, Is.EqualTo(boostAmount));
@@ -39,7 +39,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         public void Stage1_Transform()
         {
             visitor = new BoostMethodCallTreeVisitor(1);
-            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => false.Boost(0f));
+            var methodInfo = Lucene.Net.Linq.Util.Reflection.MethodOf(() => false.Boost(0f));
             var fieldExpression = new LuceneQueryFieldExpression(typeof(string), "Name");
             var query = new LuceneQueryPredicateExpression(fieldExpression, Expression.Constant("foo"), Occur.SHOULD);
 
@@ -48,7 +48,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             // (LuceneQuery[Default](+Name:"foo")).Boost(0.5f)
             var call = Expression.Call(methodInfo, query, Expression.Constant(boostAmount));
 
-            var result = visitor.VisitExpression(call);
+            var result = visitor.Visit(call);
 
             Assert.That(result, Is.SameAs(query));
             Assert.That(((LuceneQueryPredicateExpression)result).Boost, Is.EqualTo(boostAmount));
@@ -57,12 +57,12 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         [Test]
         public void Stage0_IgnoresNonLuceneQueryFieldExpression()
         {
-            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => LuceneMethods.Boost<string>(null, 0f));
+            var methodInfo = Lucene.Net.Linq.Util.Reflection.MethodOf(() => LuceneMethods.Boost<string>(null, 0f));
 
             // "hello".Boost(5.5)
             var expr = Expression.Call(methodInfo, Expression.Constant("hello"), Expression.Constant(5.5f));
 
-            var result = visitor.VisitExpression(expr);
+            var result = visitor.Visit(expr);
 
             Assert.That(result, Is.SameAs(expr));
         }
@@ -71,12 +71,12 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         public void Stage1_ThrowsWhenNotOnQueryField()
         {
             visitor = new BoostMethodCallTreeVisitor(1);
-            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => LuceneMethods.Boost<string>(null, 0f));
+            var methodInfo = Lucene.Net.Linq.Util.Reflection.MethodOf(() => LuceneMethods.Boost<string>(null, 0f));
 
             // "hello".Boost(5.5)
             var expr = Expression.Call(methodInfo, Expression.Constant("hello"), Expression.Constant(5.5f));
 
-            TestDelegate call = () => visitor.VisitExpression(expr);
+            TestDelegate call = () => visitor.Visit(expr);
 
             Assert.That(call, Throws.InstanceOf<NotSupportedException>());
         }
@@ -84,11 +84,11 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         [Test]
         public void IgnoresUnrelatedMethodCalls()
         {
-            var methodInfo = global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => string.IsNullOrEmpty("a"));
+            var methodInfo = Lucene.Net.Linq.Util.Reflection.MethodOf(() => string.IsNullOrEmpty("a"));
 
             var expr = Expression.Call(methodInfo, Expression.Constant("hello"));
 
-            var result = visitor.VisitExpression(expr);
+            var result = visitor.Visit(expr);
 
             Assert.That(result, Is.SameAs(expr));
         }

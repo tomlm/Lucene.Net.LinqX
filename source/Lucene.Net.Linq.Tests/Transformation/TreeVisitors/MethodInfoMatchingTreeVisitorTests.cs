@@ -20,7 +20,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 return SupportedMethodReplacement;
             }
 
-            protected override Expression VisitConstantExpression(ConstantExpression expression)
+            protected override Expression VisitConstant(ConstantExpression expression)
             {
                 return ConstantReplacement;
             }
@@ -37,7 +37,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var call = Expression.Call(typeof (string).GetMethod("Copy"), Expression.Constant("input"));
 
-            var result = (MethodCallExpression)visitor.VisitExpression(call);
+            var result = (MethodCallExpression)visitor.Visit(call);
 
             Assert.That(result.Arguments[0], Is.SameAs(ConstantReplacement));
         }
@@ -49,7 +49,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             visitor.AddMethod(methodInfo);
             var call = Expression.Call(methodInfo, Expression.Constant("input"));
 
-            var result = visitor.VisitExpression(call);
+            var result = visitor.Visit(call);
 
             Assert.That(result, Is.SameAs(SupportedMethodReplacement));
         }

@@ -4,7 +4,7 @@ using System.Linq;
 using Lucene.Net.Documents;
 using Lucene.Net.Linq.Mapping;
 using NUnit.Framework;
-using LuceneVersion = Lucene.Net.Util.Version;
+using LuceneVersion = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq.Tests.Mapping
 {

@@ -8,7 +8,7 @@ using Lucene.Net.Store;
 using NUnit.Framework;
 using Directory = Lucene.Net.Store.Directory;
 using LuceneVersion = Lucene.Net.Util.LuceneVersion;
-using Version = Lucene.Net.Util.Version;
+using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq.Tests.Integration
 {
@@ -17,7 +17,7 @@ namespace Lucene.Net.Linq.Tests.Integration
         protected LuceneDataProvider provider;
         protected Directory directory;
         protected IndexWriter writer;
-        protected static readonly Version version = Version.LUCENE_29;
+        protected static readonly Version version = Version.LUCENE_48;
 
         [SetUp]
         public virtual void InitializeLucene()

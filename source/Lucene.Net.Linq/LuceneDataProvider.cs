@@ -13,8 +13,7 @@ using Lucene.Net.Search;
 using Microsoft.Extensions.Logging;
 using Lucene.Net.Store;
 using Remotion.Linq.Parsing.Structure;
-using LuceneVersion = Lucene.Net.Util.LuceneVersion;
-using Version = Lucene.Net.Util.Version;
+using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq
 {
@@ -430,7 +429,7 @@ namespace Lucene.Net.Linq
 
         protected virtual IIndexWriter GetIndexWriter(Analyzer analyzer)
         {
-            var config = new IndexWriterConfig(global::Lucene.Net.Util.LuceneVersion.LUCENE_48, analyzer)
+            var config = new IndexWriterConfig(Version.LUCENE_48, analyzer)
             {
                 OpenMode = ShouldCreateIndex ? OpenMode.CREATE : OpenMode.APPEND,
                 IndexDeletionPolicy = DeletionPolicy,
@@ -468,7 +467,7 @@ namespace Lucene.Net.Linq
                 {
                     return !directory.ListAll().Any();
                 }
-                catch (global::Lucene.Net.Index.IndexNotFoundException)
+                catch (Lucene.Net.Index.IndexNotFoundException)
                 {
                     // Lucene 4.8 replaced NoSuchDirectoryException with this.
                     return true;

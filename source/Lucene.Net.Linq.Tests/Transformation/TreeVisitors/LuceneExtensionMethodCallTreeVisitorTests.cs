@@ -26,7 +26,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             // [doc].Score()
             var call = Expression.Call(typeof(LuceneMethods), "Score", new[] { doc.GetType() }, Expression.Constant(doc));
 
-            var result = visitor.VisitExpression(call);
+            var result = visitor.Visit(call);
 
             Assert.That(result, Is.InstanceOf<LuceneOrderByRelevanceExpression>());
         }
@@ -42,7 +42,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Expression.Call(typeof(LuceneMethods), "AnyField", new[] { doc.GetType() }, Expression.Constant(doc)),
                 Expression.Constant("foo"));
 
-            var result = visitor.VisitExpression(expression) as BinaryExpression;
+            var result = visitor.Visit(expression) as BinaryExpression;
 
             Assert.That(result.Left, Is.InstanceOf<LuceneQueryAnyFieldExpression>());
         }

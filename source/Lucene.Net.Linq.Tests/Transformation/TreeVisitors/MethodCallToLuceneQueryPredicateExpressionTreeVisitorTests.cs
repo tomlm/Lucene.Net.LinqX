@@ -31,7 +31,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             // [doc].Name.StartsWith("foo")
             var call = Expression.Call(field, method, foo);
 
-            var result = visitor.VisitExpression(call) as LuceneQueryPredicateExpression;
+            var result = visitor.Visit(call) as LuceneQueryPredicateExpression;
 
             Assert.That(result, Is.Not.Null, "result as LuceneQueryPredicateExpression");
             Assert.That(result.QueryField, Is.SameAs(field));
@@ -47,7 +47,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             // [doc].Name.EndsWith("foo")
             var call = Expression.Call(field, method, foo);
 
-            var result = visitor.VisitExpression(call) as LuceneQueryPredicateExpression;
+            var result = visitor.Visit(call) as LuceneQueryPredicateExpression;
 
             Assert.That(result, Is.Not.Null, "result as LuceneQueryPredicateExpression");
             Assert.That(result.QueryField, Is.SameAs(field));
@@ -63,7 +63,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             // [doc].Name.Contains("foo")
             var call = Expression.Call(field, method, foo);
 
-            var result = visitor.VisitExpression(call) as LuceneQueryPredicateExpression;
+            var result = visitor.Visit(call) as LuceneQueryPredicateExpression;
 
             Assert.That(result, Is.Not.Null, "result as LuceneQueryPredicateExpression");
             Assert.That(result.QueryField, Is.SameAs(field));

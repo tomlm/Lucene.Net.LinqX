@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
@@ -8,7 +8,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
     /// Removes method calls like string.ToLower() that have no effect on a query due to
     /// case sensitivity in Lucene being configured elsewhere by the Analyzer.
     /// </summary>
-    internal class NoOpMethodCallRemovingTreeVisitor : ExpressionTreeVisitor
+    internal class NoOpMethodCallRemovingTreeVisitor : LuceneExpressionVisitor
     {
         private static readonly ISet<string> NoOpMethods =
             new HashSet<string>
@@ -19,14 +19,14 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
                     "ToUpeprInvariant"
                 };
 
-        protected override Expression VisitMethodCallExpression(MethodCallExpression expression)
+        protected override Expression VisitMethodCall(MethodCallExpression expression)
         {
             if (NoOpMethods.Contains(expression.Method.Name))
             {
                 return expression.Object;
             }
 
-            return base.VisitMethodCallExpression(expression);
+            return base.VisitMethodCall(expression);
         }
     }
 }

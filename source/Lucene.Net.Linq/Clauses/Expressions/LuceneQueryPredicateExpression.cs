@@ -1,30 +1,33 @@
+using System;
 using System.Linq.Expressions;
 using Lucene.Net.Linq.Search;
 using Lucene.Net.Search;
-using Remotion.Linq.Clauses.Expressions;
 
 namespace Lucene.Net.Linq.Clauses.Expressions
 {
-    internal class LuceneQueryPredicateExpression : ExtensionExpression
+    internal class LuceneQueryPredicateExpression : Expression
     {
         private readonly LuceneQueryFieldExpression field;
         private readonly Expression pattern;
         private readonly Occur occur;
         private readonly QueryType queryType;
-        
+
         public LuceneQueryPredicateExpression(LuceneQueryFieldExpression field, Expression pattern, Occur occur)
             : this(field, pattern, occur, QueryType.Default)
         {
         }
 
         public LuceneQueryPredicateExpression(LuceneQueryFieldExpression field, Expression pattern, Occur occur, QueryType queryType)
-            : base(typeof(bool), (ExpressionType)LuceneExpressionType.LuceneQueryPredicateExpression)
         {
             this.field = field;
             this.pattern = pattern;
             this.occur = occur;
             this.queryType = queryType;
         }
+
+        public override ExpressionType NodeType => ExpressionType.Extension;
+        public override Type Type => typeof(bool);
+        public override bool CanReduce => false;
 
         public LuceneQueryFieldExpression QueryField
         {

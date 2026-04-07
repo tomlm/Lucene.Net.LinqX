@@ -7,7 +7,7 @@ namespace Lucene.Net.Linq.Clauses.Expressions
         private static readonly LuceneQueryAnyFieldExpression instance = new LuceneQueryAnyFieldExpression();
 
         private LuceneQueryAnyFieldExpression()
-            : base(typeof(string), (ExpressionType)LuceneExpressionType.LuceneQueryAnyFieldExpression, "*")
+            : base(typeof(string), "*")
         {
         }
 

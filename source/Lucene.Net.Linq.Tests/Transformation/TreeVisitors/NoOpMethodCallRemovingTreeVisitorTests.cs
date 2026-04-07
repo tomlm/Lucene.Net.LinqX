@@ -28,7 +28,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             // this.Name.ToLower()
             var call = Expression.Call(target, toLower);
 
-            var result = visitor.VisitExpression(call);
+            var result = visitor.Visit(call);
 
             Assert.That(result, Is.SameAs(target));
         }
@@ -41,7 +41,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             // this.Name.ToLower()
             var call = Expression.Call(target, toLower);
 
-            var result = visitor.VisitExpression(call);
+            var result = visitor.Visit(call);
 
             Assert.That(result, Is.SameAs(target));
         }

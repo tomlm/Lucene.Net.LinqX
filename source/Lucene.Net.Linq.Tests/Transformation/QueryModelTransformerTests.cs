@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
 using Lucene.Net.Linq.Transformation;
+using Lucene.Net.Linq.Util;
 using NSubstitute;
 using NUnit.Framework;
 using Remotion.Linq;
 using Remotion.Linq.Clauses;
-using Remotion.Linq.Parsing;
 
 namespace Lucene.Net.Linq.Tests.Transformation
 {
@@ -13,21 +13,21 @@ namespace Lucene.Net.Linq.Tests.Transformation
     {
         private static readonly ConstantExpression constantExpression = Expression.Constant(true);
         private static readonly WhereClause whereClause = new WhereClause(constantExpression);
-        private ExpressionTreeVisitor visitor1;
-        private ExpressionTreeVisitor visitor2;
+        private LuceneExpressionVisitor visitor1;
+        private LuceneExpressionVisitor visitor2;
         private QueryModelTransformer transformer;
         private readonly QueryModel queryModel = new QueryModel(new MainFromClause("i", typeof(Record), Expression.Constant("r")), new SelectClause(Expression.Constant("a")));
 
         [SetUp]
         public void SetUp()
         {
-            visitor1 = Substitute.For<ExpressionTreeVisitor>();
-            visitor2 = Substitute.For<ExpressionTreeVisitor>();
+            visitor1 = Substitute.For<LuceneExpressionVisitor>();
+            visitor2 = Substitute.For<LuceneExpressionVisitor>();
             var visitors = new[] { visitor1, visitor2 };
             transformer = new QueryModelTransformer(visitors, visitors);
 
-            visitor1.VisitExpression(whereClause.Predicate).Returns(whereClause.Predicate);
-            visitor2.VisitExpression(whereClause.Predicate).Returns(whereClause.Predicate);
+            visitor1.Visit(whereClause.Predicate).Returns(whereClause.Predicate);
+            visitor2.Visit(whereClause.Predicate).Returns(whereClause.Predicate);
         }
 
         [Test]
@@ -37,8 +37,8 @@ namespace Lucene.Net.Linq.Tests.Transformation
 
             Received.InOrder(() =>
             {
-                visitor1.VisitExpression(whereClause.Predicate);
-                visitor2.VisitExpression(whereClause.Predicate);
+                visitor1.Visit(whereClause.Predicate);
+                visitor2.Visit(whereClause.Predicate);
             });
         }
 
@@ -50,8 +50,8 @@ namespace Lucene.Net.Linq.Tests.Transformation
 
             transformer.VisitOrderByClause(orderByClause, queryModel, 0);
 
-            visitor1.Received().VisitExpression(constantExpression);
-            visitor2.Received().VisitExpression(constantExpression);
+            visitor1.Received().Visit(constantExpression);
+            visitor2.Received().Visit(constantExpression);
         }
     }
 }

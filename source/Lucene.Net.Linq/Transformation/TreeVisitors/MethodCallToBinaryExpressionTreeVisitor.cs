@@ -2,21 +2,21 @@
 using Lucene.Net.Linq.Clauses.Expressions;
 using Lucene.Net.Linq.Search;
 using Lucene.Net.Search;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
     /// <summary>
     /// Replaces supported method calls like [LuceneQueryFieldExpression].StartsWith("foo") with a LuceneQueryPredicateExpression like [LuceneQueryPredicateExpression](+Field:foo*)
     /// </summary>
-    internal class MethodCallToLuceneQueryPredicateExpressionTreeVisitor : ExpressionTreeVisitor
+    internal class MethodCallToLuceneQueryPredicateExpressionTreeVisitor : LuceneExpressionVisitor
     {
-        protected override Expression VisitMethodCallExpression(MethodCallExpression expression)
+        protected override Expression VisitMethodCall(MethodCallExpression expression)
         {
             var queryField = expression.Object as LuceneQueryFieldExpression;
 
             if (queryField == null)
-                return base.VisitMethodCallExpression(expression);
+                return base.VisitMethodCall(expression);
 
             if (expression.Method.Name == "StartsWith")
             {
@@ -31,7 +31,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
                 return new LuceneQueryPredicateExpression(queryField, expression.Arguments[0], Occur.MUST, QueryType.Wildcard);
             }
             
-            return base.VisitMethodCallExpression(expression);
+            return base.VisitMethodCall(expression);
         }
     }
 }

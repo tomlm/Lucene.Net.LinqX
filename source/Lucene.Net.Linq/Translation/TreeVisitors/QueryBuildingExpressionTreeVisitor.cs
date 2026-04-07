@@ -41,7 +41,7 @@ namespace Lucene.Net.Linq.Translation.TreeVisitors
             }
         }
 
-        protected override Expression VisitBinaryExpression(BinaryExpression expression)
+        protected override Expression VisitBinary(BinaryExpression expression)
         {
             switch (expression.NodeType)
             {
@@ -182,7 +182,7 @@ namespace Lucene.Net.Linq.Translation.TreeVisitors
 
         private Expression MakeBooleanQuery(BinaryExpression expression)
         {
-            var result = base.VisitBinaryExpression(expression);
+            var result = base.VisitBinary(expression);
 
             var second = (BooleanQuery)queries.Pop();
             var first = (BooleanQuery)queries.Pop();

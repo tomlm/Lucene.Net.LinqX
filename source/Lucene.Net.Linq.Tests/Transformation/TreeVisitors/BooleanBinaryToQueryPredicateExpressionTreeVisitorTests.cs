@@ -30,7 +30,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var call = CreateBinaryExpression(ExpressionType.Equal, false);
 
-            var result = visitor.VisitExpression(call) as LuceneQueryPredicateExpression;
+            var result = visitor.Visit(call) as LuceneQueryPredicateExpression;
             
             AssertResult(result, Occur.MUST_NOT);
         }
@@ -40,7 +40,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var call = CreateBinaryExpression(ExpressionType.NotEqual, true);
 
-            var result = visitor.VisitExpression(call) as LuceneQueryPredicateExpression;
+            var result = visitor.Visit(call) as LuceneQueryPredicateExpression;
 
             AssertResult(result, Occur.MUST_NOT);
         }
@@ -50,7 +50,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var call = CreateBinaryExpression(ExpressionType.Equal, true);
 
-            var result = visitor.VisitExpression(call);
+            var result = visitor.Visit(call);
 
             Assert.That(result, Is.SameAs(predicate));
         }
@@ -60,7 +60,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var call = CreateBinaryExpression(ExpressionType.NotEqual, false);
 
-            var result = visitor.VisitExpression(call);
+            var result = visitor.Visit(call);
 
             Assert.That(result, Is.SameAs(predicate));
         }
@@ -73,7 +73,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             predicate.AllowSpecialCharacters = true;
             predicate.Boost = 1234f;
 
-            var result = visitor.VisitExpression(call) as LuceneQueryPredicateExpression;
+            var result = visitor.Visit(call) as LuceneQueryPredicateExpression;
 
             AssertResult(result, Occur.MUST_NOT);
         }

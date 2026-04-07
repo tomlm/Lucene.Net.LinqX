@@ -9,7 +9,7 @@ namespace Lucene.Net.Linq.Clauses.ExpressionNodes
     {
         public static readonly MethodInfo[] SupportedMethods = new[]
             {
-                global::Remotion.Linq.Utilities.ReflectionUtility.GetMethod(() => LuceneMethods.BoostInternal<object>(null, null))
+                Lucene.Net.Linq.Util.Reflection.MethodOf(() => LuceneMethods.BoostInternal<object>(null, null))
             };
 
         private readonly LambdaExpression boostFunction;

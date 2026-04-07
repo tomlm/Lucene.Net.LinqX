@@ -16,7 +16,7 @@ namespace Lucene.Net.Linq.Tests.Integration
     {
         private readonly LuceneVersion matchVersion;
 
-        public PorterStemAnalyzer(Version version)
+        public PorterStemAnalyzer(LuceneVersion version)
         {
             this.matchVersion = version;
         }

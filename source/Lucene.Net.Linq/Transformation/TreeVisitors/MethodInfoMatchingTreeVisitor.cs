@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
-    internal abstract class MethodInfoMatchingTreeVisitor : ExpressionTreeVisitor
+    internal abstract class MethodInfoMatchingTreeVisitor : LuceneExpressionVisitor
     {
         private readonly HashSet<MethodInfo> methods = new HashSet<MethodInfo>();
 
@@ -14,14 +14,14 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
             methods.Add(method.IsGenericMethod ? method.GetGenericMethodDefinition() : method);
         }
 
-        protected override Expression VisitMethodCallExpression(MethodCallExpression expression)
+        protected override Expression VisitMethodCall(MethodCallExpression expression)
         {
             var method = expression.Method.IsGenericMethod
                              ? expression.Method.GetGenericMethodDefinition()
                              : expression.Method;
 
             if (!methods.Contains(method)) 
-                return base.VisitMethodCallExpression(expression);
+                return base.VisitMethodCall(expression);
 
             return VisitSupportedMethodCallExpression(expression);
         }

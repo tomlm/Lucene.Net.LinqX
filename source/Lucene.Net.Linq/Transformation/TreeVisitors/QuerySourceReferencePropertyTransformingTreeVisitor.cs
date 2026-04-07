@@ -3,28 +3,28 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Lucene.Net.Linq.Clauses.Expressions;
 using Remotion.Linq.Clauses.Expressions;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
     /// <summary>
     /// Replaces MemberExpression instances like [QuerySourceReferenceExpression].PropertyName with <c ref="LuceneQueryFieldExpression"/>
     /// </summary>
-    internal class QuerySourceReferencePropertyTransformingTreeVisitor : ExpressionTreeVisitor
+    internal class QuerySourceReferencePropertyTransformingTreeVisitor : LuceneExpressionVisitor
     {
         private MemberExpression parent;
         private LuceneQueryFieldExpression queryField;
 
-        protected override Expression VisitMemberExpression(MemberExpression expression)
+        protected override Expression VisitMember(MemberExpression expression)
         {
             parent = expression;
             
-            var result = base.VisitMemberExpression(expression);
+            var result = base.VisitMember(expression);
 
             return queryField ?? result;
         }
 
-        protected override Expression VisitQuerySourceReferenceExpression(QuerySourceReferenceExpression expression)
+        protected override Expression VisitQuerySourceReference(QuerySourceReferenceExpression expression)
         {
             var propertyInfo = parent.Member as PropertyInfo;
 
@@ -40,7 +40,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
             }
 
             queryField = new LuceneQueryFieldExpression(propertyType, propertyInfo.Name);
-            return base.VisitQuerySourceReferenceExpression(expression);
+            return base.VisitQuerySourceReference(expression);
         }
     }
 }

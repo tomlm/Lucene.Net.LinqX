@@ -1,25 +1,23 @@
 using System;
 using System.Linq.Expressions;
-using Remotion.Linq.Clauses.Expressions;
 
 namespace Lucene.Net.Linq.Clauses.Expressions
 {
-    internal class LuceneQueryFieldExpression : ExtensionExpression
+    internal class LuceneQueryFieldExpression : Expression
     {
+        private readonly Type type;
         private readonly string fieldName;
 
         internal LuceneQueryFieldExpression(Type type, string fieldName)
-            : base(type, (ExpressionType)LuceneExpressionType.LuceneQueryFieldExpression)
         {
+            this.type = type;
             this.fieldName = fieldName;
             FieldBoost = 1;
         }
 
-        internal LuceneQueryFieldExpression(Type type, ExpressionType expressionType, string fieldName)
-            : base(type, expressionType)
-        {
-            this.fieldName = fieldName;
-        }
+        public override ExpressionType NodeType => ExpressionType.Extension;
+        public override Type Type => type;
+        public override bool CanReduce => false;
 
         protected override Expression VisitChildren(ExpressionVisitor visitor)
         {
@@ -28,6 +26,7 @@ namespace Lucene.Net.Linq.Clauses.Expressions
         }
 
         public string FieldName { get { return fieldName; } }
+
         // Renamed from "Boost" to avoid C# overload-resolution collision
         // with the LuceneMethods.Boost<T>(this T, float) extension method,
         // which is in scope across the Lucene.Net.Linq namespace tree.
@@ -44,8 +43,8 @@ namespace Lucene.Net.Linq.Clauses.Expressions
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (LuceneQueryFieldExpression)) return false;
-            return Equals((LuceneQueryFieldExpression) obj);
+            if (obj.GetType() != typeof(LuceneQueryFieldExpression)) return false;
+            return Equals((LuceneQueryFieldExpression)obj);
         }
 
         public override int GetHashCode()

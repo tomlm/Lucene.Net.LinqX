@@ -24,7 +24,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
         {
             var expr = Expression.Property(new QuerySourceReferenceExpression(new MainFromClause("i", typeof(Record), Expression.Constant("r"))), "Name");
 
-            var result = visitor.VisitExpression(expr);
+            var result = visitor.Visit(expr);
 
             Assert.That(result, Is.EqualTo(new LuceneQueryFieldExpression(typeof(string), "Name")));
         }
@@ -37,7 +37,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var call = Expression.Call(Expression.Constant(this), GetType().GetMethod("Convert"), queryRef);
             var prop = Expression.Property(call, "Name");
 
-            var result = visitor.VisitExpression(prop);
+            var result = visitor.Visit(prop);
 
             Assert.That(result, Is.EqualTo(new LuceneQueryFieldExpression(typeof(string), "Name")));
         }

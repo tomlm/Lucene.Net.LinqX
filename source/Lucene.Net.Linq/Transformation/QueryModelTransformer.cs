@@ -16,11 +16,11 @@ namespace Lucene.Net.Linq.Transformation
     {
         private static readonly ILogger Log = Logging.CreateLogger<QueryModelTransformer>();
 
-        private readonly IEnumerable<ExpressionTreeVisitor> whereSelectClauseVisitors;
-        private readonly IEnumerable<ExpressionTreeVisitor> orderingVisitors;
+        private readonly IEnumerable<LuceneExpressionVisitor> whereSelectClauseVisitors;
+        private readonly IEnumerable<LuceneExpressionVisitor> orderingVisitors;
 
         internal QueryModelTransformer()
-            : this(new ExpressionTreeVisitor[]
+            : this(new LuceneExpressionVisitor[]
                        {
                            new SubQueryContainsTreeVisitor(),
                            new LuceneExtensionMethodCallTreeVisitor(),
@@ -41,7 +41,7 @@ namespace Lucene.Net.Linq.Transformation
                            new BoostMethodCallTreeVisitor(1),
                            new FuzzyMethodCallTreeVisitor()
                        },
-                   new ExpressionTreeVisitor[]
+                   new LuceneExpressionVisitor[]
                        {
                            new LuceneExtensionMethodCallTreeVisitor(),
                            new BoostMethodCallTreeVisitor(1),
@@ -53,7 +53,7 @@ namespace Lucene.Net.Linq.Transformation
         {
         }
 
-        internal QueryModelTransformer(IEnumerable<ExpressionTreeVisitor> whereSelectClauseVisitors, IEnumerable<ExpressionTreeVisitor> orderingVisitors)
+        internal QueryModelTransformer(IEnumerable<LuceneExpressionVisitor> whereSelectClauseVisitors, IEnumerable<LuceneExpressionVisitor> orderingVisitors)
         {
             this.whereSelectClauseVisitors = whereSelectClauseVisitors;
             this.orderingVisitors = orderingVisitors;
@@ -80,7 +80,7 @@ namespace Lucene.Net.Linq.Transformation
 
             foreach (var visitor in whereSelectClauseVisitors)
             {
-                whereClause.TransformExpressions(visitor.VisitExpression);
+                whereClause.TransformExpressions(visitor.Visit);
                 Log.LogTrace("Transformed QueryModel after {Visitor}: {QueryModel}", visitor.GetType().Name, queryModel);
             }
 
@@ -93,7 +93,7 @@ namespace Lucene.Net.Linq.Transformation
 
             foreach (var visitor in orderingVisitors)
             {
-                orderByClause.TransformExpressions(visitor.VisitExpression);
+                orderByClause.TransformExpressions(visitor.Visit);
                 Log.LogTrace("Transformed QueryModel after {Visitor}: {QueryModel}", visitor.GetType().Name, queryModel);
             }
             

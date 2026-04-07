@@ -42,7 +42,7 @@ namespace Lucene.Net.Linq.Translation
         public override void VisitWhereClause(WhereClause whereClause, QueryModel queryModel, int index)
         {
             var visitor = new QueryBuildingExpressionTreeVisitor(fieldMappingInfoProvider);
-            visitor.VisitExpression(whereClause.Predicate);
+            visitor.Visit(whereClause.Predicate);
             
             model.AddQuery(visitor.Query);
         }

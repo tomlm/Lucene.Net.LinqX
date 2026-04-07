@@ -14,7 +14,7 @@ namespace Lucene.Net.Linq.Tests.Integration
     {
         IQueryable<SampleDocument> documents;
 
-        protected override Analyzer GetAnalyzer(Net.Util.Version version)
+        protected override Analyzer GetAnalyzer(Net.Util.LuceneVersion version)
         {
             return new KeywordAnalyzer();
         }

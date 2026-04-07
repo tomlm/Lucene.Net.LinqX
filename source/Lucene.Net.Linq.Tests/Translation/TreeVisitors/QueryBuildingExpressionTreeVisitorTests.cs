@@ -7,7 +7,7 @@ using Lucene.Net.Linq.Tests.Integration;
 using Lucene.Net.Linq.Translation.TreeVisitors;
 using Lucene.Net.Search;
 using NUnit.Framework;
-using Version = Lucene.Net.Util.Version;
+using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq.Tests.Translation.TreeVisitors
 {
@@ -42,7 +42,7 @@ namespace Lucene.Net.Linq.Tests.Translation.TreeVisitors
                 MemberAccessId,
                 Expression.Constant(1));
 
-            TestDelegate call = () => builder.VisitExpression(expression);
+            TestDelegate call = () => builder.Visit(expression);
 
             Assert.That(call, Throws.Exception.InstanceOf<NotSupportedException>());
         }
@@ -56,7 +56,7 @@ namespace Lucene.Net.Linq.Tests.Translation.TreeVisitors
                 Occur.MUST,
                 QueryType.GreaterThan);
 
-            builder.VisitExpression(expression);
+            builder.Visit(expression);
 
             Assert.That(builder.Query.ToString(), Is.EqualTo("+Name:{SampleName TO *]"));
         }
@@ -70,7 +70,7 @@ namespace Lucene.Net.Linq.Tests.Translation.TreeVisitors
                 Occur.MUST,
                 QueryType.GreaterThanOrEqual);
 
-            builder.VisitExpression(expression);
+            builder.Visit(expression);
 
             Assert.That(builder.Query.ToString(), Is.EqualTo("+Name:[SampleName TO *]"));
         }
@@ -84,7 +84,7 @@ namespace Lucene.Net.Linq.Tests.Translation.TreeVisitors
                 Occur.MUST,
                 QueryType.LessThan);
 
-            builder.VisitExpression(expression);
+            builder.Visit(expression);
 
             Assert.That(builder.Query.ToString(), Is.EqualTo("+Name:[* TO SampleName}"));
         }
@@ -98,7 +98,7 @@ namespace Lucene.Net.Linq.Tests.Translation.TreeVisitors
                 Occur.MUST,
                 QueryType.LessThanOrEqual);
 
-            builder.VisitExpression(expression);
+            builder.Visit(expression);
 
             Assert.That(builder.Query.ToString(), Is.EqualTo("+Name:[* TO SampleName]"));
         }

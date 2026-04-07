@@ -1,13 +1,12 @@
 using System.Linq.Expressions;
 using Lucene.Net.Linq.Clauses.Expressions;
-using Remotion.Linq.Clauses.Expressions;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Clauses.TreeVisitors
 {
-    internal abstract class LuceneExpressionTreeVisitor : ExpressionTreeVisitor
+    internal abstract class LuceneExpressionTreeVisitor : LuceneExpressionVisitor
     {
-        protected override Expression VisitExtensionExpression(ExtensionExpression expression)
+        protected override Expression VisitExtension(Expression expression)
         {
             if (expression is LuceneQueryExpression)
             {
@@ -39,12 +38,12 @@ namespace Lucene.Net.Linq.Clauses.TreeVisitors
                 return VisitBoostBinaryExpression((BoostBinaryExpression) expression);
             }
 
-            return base.VisitExtensionExpression(expression);
+            return base.VisitExtension(expression);
         }
 
         protected virtual Expression VisitBoostBinaryExpression(BoostBinaryExpression expression)
         {
-            var binary = VisitExpression(expression.BinaryExpression);
+            var binary = Visit(expression.BinaryExpression);
 
             if (ReferenceEquals(expression.BinaryExpression, binary)) return expression;
 
@@ -53,9 +52,9 @@ namespace Lucene.Net.Linq.Clauses.TreeVisitors
 
         protected virtual Expression VisitLuceneRangeQueryExpression(LuceneRangeQueryExpression expression)
         {
-            var lower = VisitExpression(expression.Lower);
-            var upper = VisitExpression(expression.Upper);
-            var field = VisitExpression(expression.QueryField);
+            var lower = Visit(expression.Lower);
+            var upper = Visit(expression.Upper);
+            var field = Visit(expression.QueryField);
 
             if (ReferenceEquals(lower, expression.Lower) && ReferenceEquals(upper, expression.Upper)
                 && ReferenceEquals(field, expression.QueryField))
@@ -70,8 +69,8 @@ namespace Lucene.Net.Linq.Clauses.TreeVisitors
 
         protected virtual Expression VisitLuceneQueryPredicateExpression(LuceneQueryPredicateExpression expression)
         {
-            var field = (LuceneQueryFieldExpression)VisitExpression(expression.QueryField);
-            var pattern = VisitExpression(expression.QueryPattern);
+            var field = (LuceneQueryFieldExpression)Visit(expression.QueryField);
+            var pattern = Visit(expression.QueryPattern);
 
             if (field != expression.QueryField || pattern != expression.QueryPattern)
             {

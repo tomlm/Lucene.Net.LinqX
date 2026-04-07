@@ -27,7 +27,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
             var outer = Expression.MakeBinary(ExpressionType.AndAlso,
                 Expression.Convert(Expression.Constant((bool?) false), typeof (bool)), inner);
 
-            var result = (BinaryExpression) visitor.VisitExpression(outer);
+            var result = (BinaryExpression) visitor.Visit(outer);
 
             Assert.That(result.Left, Is.InstanceOf<ConstantExpression>());
 
@@ -47,7 +47,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Expression.Convert(luceneQueryFieldExpression, typeof(Int32)),
                 Expression.Constant(0));
 
-            var result = (BinaryExpression)visitor.VisitExpression(binary);
+            var result = (BinaryExpression)visitor.Visit(binary);
 
             Assert.That(result.Left, Is.SameAs(luceneQueryFieldExpression));
             Assert.That(result.Right, Is.InstanceOf<ConstantExpression>());
@@ -61,7 +61,7 @@ namespace Lucene.Net.Linq.Tests.Transformation.TreeVisitors
                 Expression.Convert(call, typeof (bool?)),
                 Expression.Convert(Expression.Constant(false), typeof (bool?)));
 
-            var result = (BinaryExpression) visitor.VisitExpression(expression);
+            var result = (BinaryExpression) visitor.Visit(expression);
 
             Assert.That(result.Left, Is.SameAs(call));
             Assert.That(result.Right, Is.InstanceOf<ConstantExpression>());

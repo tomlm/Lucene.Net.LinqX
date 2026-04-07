@@ -4,14 +4,14 @@ using Lucene.Net.Linq.Clauses.Expressions;
 using Lucene.Net.Linq.Search;
 using Lucene.Net.Linq.Util;
 using Lucene.Net.Search;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
     /// <summary>
     /// Replaces supported method calls like <c>string.Compare([LuceneQueryFieldExpression], "abc") > 0</c> to LuceneQueryPredicateExpression
     /// </summary>
-    internal class CompareCallToLuceneQueryPredicateExpressionTreeVisitor : ExpressionTreeVisitor
+    internal class CompareCallToLuceneQueryPredicateExpressionTreeVisitor : LuceneExpressionVisitor
     {
         private static readonly ISet<ExpressionType> compareTypes =
             new HashSet<ExpressionType>
@@ -22,14 +22,14 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
                 ExpressionType.LessThanOrEqual
             };
 
-        protected override Expression VisitBinaryExpression(BinaryExpression expression)
+        protected override Expression VisitBinary(BinaryExpression expression)
         {
             if (!compareTypes.Contains(expression.NodeType) || !IsCompareMethod(expression.Left) || !expression.Right.IsZeroConstant())
             {
-                return base.VisitBinaryExpression(expression);
+                return base.VisitBinary(expression);
             }
 
-            return ConvertToQueryExpression(expression.NodeType, (MethodCallExpression) expression.Left) ?? base.VisitBinaryExpression(expression);
+            return ConvertToQueryExpression(expression.NodeType, (MethodCallExpression) expression.Left) ?? base.VisitBinary(expression);
         }
 
         private LuceneQueryPredicateExpression ConvertToQueryExpression(ExpressionType compareType, MethodCallExpression expression)

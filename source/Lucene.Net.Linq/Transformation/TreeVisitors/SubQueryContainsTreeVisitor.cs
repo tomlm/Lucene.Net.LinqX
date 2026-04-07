@@ -1,16 +1,16 @@
 using System.Linq.Expressions;
 using Remotion.Linq.Clauses.Expressions;
 using Remotion.Linq.Clauses.ResultOperators;
-using Remotion.Linq.Parsing;
+using Lucene.Net.Linq.Util;
 
 namespace Lucene.Net.Linq.Transformation.TreeVisitors
 {
     /// <summary>
     /// Replaces subqueries like {[doc].Tags => Contains("c")} with BinaryExpressions like ([doc].Tags == "c").
     /// </summary>
-    internal class SubQueryContainsTreeVisitor : ExpressionTreeVisitor
+    internal class SubQueryContainsTreeVisitor : LuceneExpressionVisitor
     {
-        protected override Expression VisitSubQueryExpression(SubQueryExpression expression)
+        protected override Expression VisitSubQuery(SubQueryExpression expression)
         {
             var operators = expression.QueryModel.ResultOperators;
 
@@ -28,7 +28,7 @@ namespace Lucene.Net.Linq.Transformation.TreeVisitors
                 return Expression.MakeBinary(ExpressionType.Equal, field, pattern);
             }
 
-            return base.VisitSubQueryExpression(expression);
+            return base.VisitSubQuery(expression);
         }
     }
 }

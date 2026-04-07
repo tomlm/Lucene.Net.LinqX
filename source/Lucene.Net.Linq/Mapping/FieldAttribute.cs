@@ -138,7 +138,7 @@ namespace Lucene.Net.Linq.Mapping
         /// <summary>
         /// When set, supplies a custom analyzer for this field. The analyzer type
         /// must have either a parameterless public constructor, or a public constructor
-        /// that accepts a <see cref="Net.Util.Version"/> argument.
+        /// that accepts a <see cref="Lucene.Net.Util.LuceneVersion"/> argument.
         /// 
         /// When an external Analyzer is provided on <see cref="LuceneDataProvider"/>
         /// methods it will override this setting.

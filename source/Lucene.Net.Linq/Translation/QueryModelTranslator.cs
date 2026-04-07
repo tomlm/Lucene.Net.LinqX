@@ -2,7 +2,7 @@
 using Lucene.Net.Linq.Clauses;
 using Lucene.Net.Linq.Mapping;
 using Lucene.Net.Linq.Translation.ResultOperatorHandlers;
-using Lucene.Net.Linq.Translation.TreeVisitors;
+using Lucene.Net.Linq.Translation.Visitors;
 using Lucene.Net.Search;
 using Remotion.Linq;
 using Remotion.Linq.Clauses;
@@ -41,7 +41,7 @@ namespace Lucene.Net.Linq.Translation
 
         public override void VisitWhereClause(WhereClause whereClause, QueryModel queryModel, int index)
         {
-            var visitor = new QueryBuildingExpressionTreeVisitor(fieldMappingInfoProvider);
+            var visitor = new QueryBuildingExpressionVisitor(fieldMappingInfoProvider);
             visitor.Visit(whereClause.Predicate);
             
             model.AddQuery(visitor.Query);

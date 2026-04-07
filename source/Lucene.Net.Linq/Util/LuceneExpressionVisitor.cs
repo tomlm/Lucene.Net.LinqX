@@ -12,7 +12,7 @@ namespace Lucene.Net.Linq.Util
     /// child-type validation.
     /// </summary>
     /// <remarks>
-    /// re-linq 1.x's ExpressionTreeVisitor recreated unary nodes via
+    /// re-linq 1.x's ExpressionVisitor recreated unary nodes via
     /// <see cref="Expression.MakeUnary(ExpressionType, Expression, Type, System.Reflection.MethodInfo)"/>
     /// without going through the BCL <c>ExpressionVisitor</c>'s Update +
     /// ValidateUnary path. The BCL validation throws when a transforming

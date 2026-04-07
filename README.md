@@ -2,9 +2,9 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/voelauhwvv1l8j2f)](https://ci.appveyor.com/project/chriseldredge/lucene-net-linq)
 
-Lucene.Net.Linq is a .net library that enables LINQ queries to run natively on a Lucene.Net index.
+Lucene.Net.LinqX is a .net library that enables LINQ queries to run natively on a Lucene.Net index.
 
-### 4.0.0-alpha1 — Lucene.Net 4.8 / .NET 8 port
+### Lucene.Net 4.8 / .NET 8 port
 
 This branch ports the library from the original `Lucene.Net 3.0.3` /
 `net40` baseline onto `Lucene.Net 4.8.0-beta00017` and SDK-style projects
@@ -65,10 +65,10 @@ search the source for `TODO Lucene 4.8 port` for the entry points.
 
 ## Available on NuGet Gallery
 
-To install the [Lucene.Net.Linq package](http://nuget.org/packages/Lucene.Net.Linq),
+To install the [Lucene.Net.LinqX package](http://nuget.org/packages/Lucene.Net.LinqX),
 run the following command in the [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console)
 
-    PM> Install-Package Lucene.Net.Linq
+    PM> Install-Package Lucene.Net.LinqX
 
 ## Examples
 

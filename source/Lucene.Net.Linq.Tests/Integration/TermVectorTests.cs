@@ -1,20 +1,41 @@
-// Stage 5 port: TermFreqVectorDocumentMapper is a stub in the Lucene 4.8
-// port (the Lucene 3 ITermFreqVector type was removed in favour of Terms
-// + TermsEnum from IndexReader.GetTermVector). The full integration test
-// is preserved in git history; this stub keeps the file in the project so
-// callers that reference TermVectorTests still resolve.
-
+using System.Linq;
+using Lucene.Net.Linq.Mapping;
+using Lucene.Net.Util;
 using NUnit.Framework;
 
 namespace Lucene.Net.Linq.Tests.Integration
 {
     [TestFixture]
-    [Ignore("TermFreqVectorDocumentMapper needs Lucene 4.8 port; see Mapping/TermFreqVectorDocumentMapper.cs")]
-    public class TermVectorTests
+    public class TermVectorTests : IntegrationTestBase
     {
         [Test]
         public void GetTermVectors()
         {
+            AddDocument(new TermVectorDoc { Content = "car truck boat train trucks", NoTerms = "no term analysis for this field." });
+
+            var mapper = new TermFreqVectorDocumentMapper<TermVectorDoc>(LuceneVersion.LUCENE_48);
+
+            var doc = provider.AsQueryable(mapper).Single();
+
+            var termFreqVectors = mapper[doc];
+            Assert.That(termFreqVectors, Is.Not.Null);
+            Assert.That(termFreqVectors.Length, Is.EqualTo(1));
+
+            var termFreqVector = termFreqVectors[0];
+
+            Assert.That(termFreqVector, Is.Not.Null);
+            Assert.That(termFreqVector.Field, Is.EqualTo("Content"));
+            Assert.That(termFreqVector.GetTerms(), Is.EqualTo(new[] { "boat", "car", "train", "truck" }));
+            Assert.That(termFreqVector.GetTermFrequencies(), Is.EqualTo(new[] { 1, 1, 1, 2 }));
+        }
+
+        public class TermVectorDoc
+        {
+            [Field(TermVector = TermVectorMode.Yes)]
+            public string Content { get; set; }
+
+            [Field(TermVector = TermVectorMode.No)]
+            public string NoTerms { get; set; }
         }
     }
 }

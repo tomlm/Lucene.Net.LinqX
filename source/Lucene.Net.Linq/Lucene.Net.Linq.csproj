@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
@@ -13,21 +13,24 @@
     <!-- Package metadata (moved from .nuspec) -->
     <IsPackable>true</IsPackable>
     <PackageId>Lucene.Net.LinqX</PackageId>
-    <Version>4.8.0-alpha1</Version>
-    <Title>Lucene.Net.Linq</Title>
+    <Version>4.8.0-beta00017</Version>
+    <Title>Lucene.Net.LinqX</Title>
     <Authors>Chris Eldredge</Authors>
     <Owners>The Motley Fool, LLC</Owners>
     <Copyright>Copyright 2012-2014 The Motley Fool, LLC</Copyright>
-    <Description>Execute LINQ queries on Lucene.Net complete with object to Document mapping.</Description>
+    <Description>Execute LINQ queries on Lucene.Net complete with object to Document mapping (.NET core and Lucene 4.X).</Description>
     <PackageTags>lucene.net lucene linq odata search nosql</PackageTags>
-    <PackageProjectUrl>https://github.com/themotleyfool/Lucene.Net.Linq</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/tomlm/Lucene.Net.LinqX</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageReleaseNotes>See https://github.com/themotleyfool/Lucene.Net.Linq/releases</PackageReleaseNotes>
-    <RepositoryUrl>https://github.com/themotleyfool/Lucene.Net.Linq</RepositoryUrl>
+    <PackageReleaseNotes>See https://github.com/tomlm/Lucene.Net.LinqX/releases</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/tomlm/Lucene.Net.LinqX</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>True</IncludeSymbols>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="" />
+    <None Include="..\..\Readme.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

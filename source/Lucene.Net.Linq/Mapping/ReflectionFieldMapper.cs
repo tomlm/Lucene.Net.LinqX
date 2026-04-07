@@ -241,14 +241,36 @@ namespace Lucene.Net.Linq.Mapping
             if (Converter == null || NativeSort)
                 return new SortField(FieldName, SortFieldType.STRING, reverse);
 
-            // TODO Lucene 4.8 port: the converter-based custom sort path used
-            // FieldComparator<T> + FieldCache_Fields.GetStrings, neither of
-            // which exist in Lucene.Net 4.8 in the same form. For now fall
-            // back to alphanumeric (string) sort and rely on consumers to
-            // mark such properties NativeSort=true. Re-enabling structured
-            // converter sort needs a per-segment FieldCache.GetTerms-based
-            // FieldComparer<T>; tracked for Stage 6 follow-up.
-            return new SortField(FieldName, SortFieldType.STRING, reverse);
+            var propertyType = propertyInfo.PropertyType;
+
+            // Lucene.Net 4.8's FieldComparer<T> constrains T to reference
+            // types, so the converter-based custom comparator path can only
+            // service properties whose declared type is a reference type.
+            // Value types (int, bool, DateTime, nullables) fall back to a
+            // string SortField; properties that need true numeric ordering
+            // should be marked [NumericField], which routes to
+            // NumericReflectionFieldMapper and a typed SortField instead.
+            if (propertyType.IsValueType || Nullable.GetUnderlyingType(propertyType) != null)
+                return new SortField(FieldName, SortFieldType.STRING, reverse);
+
+            FieldComparerSource source;
+
+            if (typeof(IComparable).IsAssignableFrom(propertyType))
+            {
+                source = new NonGenericConvertableFieldComparatorSource(propertyType, Converter);
+            }
+            else if (typeof(IComparable<>).MakeGenericType(propertyType).IsAssignableFrom(propertyType))
+            {
+                source = new GenericConvertableFieldComparatorSource(propertyType, Converter);
+            }
+            else
+            {
+                throw new NotSupportedException(string.Format(
+                    "The type {0} does not implement IComparable or IComparable<T>. To use alphanumeric sorting, specify NativeSort=true on the mapping.",
+                    propertyType));
+            }
+
+            return new SortField(FieldName, source, reverse);
         }
 
         private string EvaluateExpressionToStringAndAnalyze(object value)

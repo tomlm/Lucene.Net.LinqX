@@ -34,10 +34,11 @@ namespace Lucene.Net.Linq.Tests.Mapping
         {
             var result = CreateMapper(versionPropInfo).CreateSortField(reverse: false);
 
-            // Stage 5 port: SortField.CUSTOM is gone in 4.8 — the converter-
-            // based comparator path is currently disabled and falls back to
-            // a string sort. See ReflectionFieldMapper.CreateSortField.
-            Assert.That(result.Type, Is.EqualTo(SortFieldType.STRING));
+            // SortField.CUSTOM was removed in Lucene 4.8; a custom
+            // FieldComparerSource now reports SortFieldType.CUSTOM via the
+            // SortField (Type returns CUSTOM when ComparerSource is set).
+            Assert.That(result.Type, Is.EqualTo(SortFieldType.CUSTOM));
+            Assert.That(result.ComparerSource, Is.Not.Null);
         }
 
         [Test]

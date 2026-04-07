@@ -114,12 +114,7 @@ namespace Lucene.Net.Linq.Tests.Mapping
             var sort = mapper.CreateSortField(reverse: false);
 
             Assert.That(sort.Field, Is.EqualTo(mapper.FieldName));
-            // Stage 4 port note: the converter-based custom sort path is
-            // currently disabled (CreateSortField falls back to a string
-            // SortField). Once the comparator path is re-ported the test
-            // should assert ComparerSource again.
-            Assert.That(sort.Type, Is.EqualTo(SortFieldType.STRING));
-
+            Assert.That(sort.ComparerSource, Is.InstanceOf<NonGenericConvertableFieldComparatorSource>());
         }
 
         [Test]

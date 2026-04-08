@@ -1,12 +1,10 @@
-## LINQ to Lucene.Net modern
+## LINQ to Lucene.Net Modernized for Lucene.Net 4.8 and .NET 8
 
-[![Build status](https://ci.appveyor.com/api/projects/status/voelauhwvv1l8j2f)](https://ci.appveyor.com/project/chriseldredge/lucene-net-linq)
+Iciclecreek.Lucene.Net.Linq is a .NET library that enables LINQ queries to run natively on a Lucene.Net index.
 
-Lucene.Net.LinqX is a .net library that enables LINQ queries to run natively on a Lucene.Net index.
+### Port
 
-### Lucene.Net 4.8 / .NET 8 port
-
-This branch ports the library from the original `Lucene.Net 3.0.3` /
+This branch ports the Lucene.Net.Linq library from the original `Lucene.Net.Linq 3.0.3` /
 `net40` baseline onto `Lucene.Net 4.8.0-beta00017` and SDK-style projects
 multi-targeting `netstandard2.0;net8.0`. Highlights:
 
@@ -54,10 +52,10 @@ multi-targeting `netstandard2.0;net8.0`. Highlights:
 
 ## Available on NuGet Gallery
 
-To install the [Lucene.Net.LinqX package](http://nuget.org/packages/Lucene.Net.LinqX),
+To install the [Iciclecreek.Lucene.Net.Linq package](http://nuget.org/packages/Iciclecreek.Lucene.Net.Linq),
 run the following command in the [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console)
 
-    PM> Install-Package Lucene.Net.LinqX
+    PM> Install-Package Iciclecreek.Lucene.Net.Linq
 
 ## Examples
 
@@ -67,7 +65,7 @@ run the following command in the [Package Manager Console](http://docs.nuget.org
 
 ## Upgrading from Lucene.Net.Linq 3.x
 
-`Lucene.Net.LinqX` 4.x is source-compatible for the most common usage
+`Iciclecreek.Lucene.Net.Linq` 4.x is source-compatible for the most common usage
 shape — annotated POCOs, `LuceneDataProvider`, `OpenSession`, LINQ
 queries — but the underlying Lucene 3 → 4.8 jump forces a few changes.
 
@@ -81,9 +79,9 @@ directory; do not point the new library at an old index.
 
 1. Replace the package reference:
    ```xml
-   <PackageReference Include="Lucene.Net.LinqX" Version="4.8.0-beta00017" />
+   <PackageReference Include="Iciclecreek.Lucene.Net.Linq" Version="4.8.0-beta00017" />
    ```
-   The package id changed from `Lucene.Net.Linq` to `Lucene.Net.LinqX`
+   The package id changed from `Lucene.Net.Linq` to `Iciclecreek.Lucene.Net.Linq`
    to disambiguate this fork from the dormant original.
 
 2. Retarget. The library is `netstandard2.0;net8.0`. .NET Framework 4.8
@@ -146,7 +144,7 @@ directory; do not point the new library at an old index.
 
 ## Mapping objects to documents
 
-Lucene.Net.LinqX maps plain CLR objects (POCOs) onto Lucene
+Iciclecreek.Lucene.Net.Linq maps plain CLR objects (POCOs) onto Lucene
 `Document`s. You can describe the mapping in two ways: with attributes
 on the type, or with a fluent code-first builder. Both produce the
 same internal `IFieldMapper<T>` graph and are fully interchangeable.

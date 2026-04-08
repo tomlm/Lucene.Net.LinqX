@@ -12,18 +12,18 @@
 
     <!-- Package metadata (moved from .nuspec) -->
     <IsPackable>true</IsPackable>
-    <PackageId>Lucene.Net.LinqX</PackageId>
+    <PackageId>Iciclecreek.Lucene.Net.Linq</PackageId>
     <Version>4.8.0-beta00017</Version>
-    <Title>Lucene.Net.LinqX</Title>
-    <Authors>Chris Eldredge</Authors>
+    <Title>LuceneLinq</Title>
+    <Authors>Chris Eldredge/Tom Laird-McConnell</Authors>
     <Owners>The Motley Fool, LLC</Owners>
     <Copyright>Copyright 2012-2014 The Motley Fool, LLC</Copyright>
-    <Description>Execute LINQ queries on Lucene.Net complete with object to Document mapping (.NET core and Lucene 4.X).</Description>
+    <Description>Port of Lucene.Net.Linq to .NET core and Lucene 4.x. Execute LINQ queries on Lucene.Net complete with object to Document mapping</Description>
     <PackageTags>lucene.net lucene linq odata search nosql</PackageTags>
-    <PackageProjectUrl>https://github.com/tomlm/Lucene.Net.LinqX</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/tomlm/Iciclecreek.Lucene.Net.Linq</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageReleaseNotes>See https://github.com/tomlm/Lucene.Net.LinqX/releases</PackageReleaseNotes>
-    <RepositoryUrl>https://github.com/tomlm/Lucene.Net.LinqX</RepositoryUrl>
+    <PackageReleaseNotes>See https://github.com/tomlm/Iciclecreek.Lucene.Net.Linq/releases</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/tomlm/Iciclecreek.Lucene.Net.Linq</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <IncludeSymbols>True</IncludeSymbols>
   </PropertyGroup>

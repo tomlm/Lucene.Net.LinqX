@@ -123,53 +123,6 @@ namespace Lucene.Net.Linq.Tests.Translation
             Assert.That(transformer.Model.DocumentTracker, Is.SameAs(expr.Value));
         }
 
-        [Test]
-        public void SetsQueryFilterOnKeyField()
-        {
-            mappingProvider.KeyProperties.Returns(new[] { "MyProp" });
-            mappingProvider.GetMappingInfo("MyProp").Returns(new FakeFieldMappingInfo { FieldName = "my-key" });
-
-            transformer.Build(queryModel);
-
-            var filter = (QueryWrapperFilter)transformer.Model.Filter;
-
-            Assert.That(filter, Is.Not.Null, "transformer.Model.Filter");
-            Assert.That(filter.ToString(), Is.EqualTo("QueryWrapperFilter(+my-key:*)"));
-        }
-
-        [Test]
-        public void SetsQueryFilterOnKeyFieldWithConstraint()
-        {
-            mappingProvider.KeyProperties.Returns(new[] { "MyProp" });
-            mappingProvider.GetMappingInfo("MyProp").Returns(new DocumentKeyFieldMapper<string>("my-key", "fixed-value"));
-
-            transformer.Build(queryModel);
-
-            var filter = (QueryWrapperFilter)transformer.Model.Filter;
-
-            Assert.That(filter, Is.Not.Null, "transformer.Model.Filter");
-            Assert.That(filter.ToString(), Is.EqualTo("QueryWrapperFilter(+my-key:fixed-value)"));
-        }
-
-        [Test]
-        public void DoesNotSetQueryFilterWhenDisabled()
-        {
-            context.Settings.EnableMultipleEntities = false;
-
-            transformer.Build(queryModel);
-
-            Assert.That(transformer.Model.Filter, Is.Null, "transformer.Model.Filter");
-        }
-
-        [Test]
-        public void SetsNullQueryFilterOnEmptyKeyFields()
-        {
-            mappingProvider.KeyProperties.Returns(new string[0]);
-
-            transformer.Build(queryModel);
-
-            Assert.That(transformer.Model.Filter, Is.Null);
-        }
 
         private void AssertSortFieldEquals(SortField sortField, string expectedFieldName, OrderingDirection expectedDirection, SortFieldType expectedType)
         {

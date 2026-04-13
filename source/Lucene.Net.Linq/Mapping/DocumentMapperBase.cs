@@ -5,20 +5,32 @@ using System.Linq;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Core;
 using Lucene.Net.Documents;
+using Lucene.Net.Index;
 using Lucene.Net.Linq.Analysis;
+using Lucene.Net.Linq.Util;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
+using Microsoft.Extensions.Logging;
 using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq.Mapping
 {
     public abstract class DocumentMapperBase<T> : IDocumentMapper<T>, IDocumentKeyConverter, IDocumentModificationDetector<T>
     {
+        private static readonly ILogger Log = Logging.CreateLogger(typeof(DocumentMapperBase<>));
+
         protected readonly Analyzer externalAnalyzer;
         protected PerFieldAnalyzer analyzer;
         protected readonly Version version;
         protected readonly IDictionary<string, IFieldMapper<T>> fieldMap = new Dictionary<string, IFieldMapper<T>>(StringComparer.Ordinal);
         protected readonly List<IFieldMapper<T>> keyFields = new List<IFieldMapper<T>>();
+
+        /// <summary>
+        /// Registry for creating and hydrating polymorphic subtypes.
+        /// When set, <see cref="ToDocument"/> writes _type_/_types_ fields
+        /// and subtypes are instantiated via the registry.
+        /// </summary>
+        internal PolymorphicMapperRegistry PolymorphicMapperRegistry { get; set; }
 
         /// <summary>
         /// Constructs an instance that will create an <see cref="Analyzer"/>
@@ -42,6 +54,8 @@ namespace Lucene.Net.Linq.Mapping
             this.externalAnalyzer = externalAnalyzer;
             this.analyzer = new PerFieldAnalyzer(new KeywordAnalyzer());
         }
+
+        public Type MappedType => typeof(T);
 
         public virtual PerFieldAnalyzer Analyzer
         {
@@ -83,9 +97,40 @@ namespace Lucene.Net.Linq.Mapping
 
         public virtual void ToDocument(T source, Document target)
         {
+            var actualType = source.GetType();
+
+            // If the source is a subtype and we have a registry, delegate to the
+            // subtype's mapper so that subtype-specific properties are captured.
+            if (PolymorphicMapperRegistry != null && actualType != typeof(T) && typeof(T).IsAssignableFrom(actualType))
+            {
+                PolymorphicMapperRegistry.MapToDocument(source, target);
+                return;
+            }
+
+            MapFieldsToDocument(source, target);
+        }
+
+        /// <summary>
+        /// Copies all mapped fields from source to target, then writes
+        /// the polymorphic _type_/_types_ internal fields.
+        /// Called directly by <see cref="PolymorphicMapperRegistry"/> to
+        /// avoid re-entering polymorphic dispatch.
+        /// </summary>
+        internal void MapFieldsToDocument(T source, Document target)
+        {
             foreach (var mapping in fieldMap)
             {
                 mapping.Value.CopyToDocument(source, target);
+            }
+
+            var actualType = source.GetType();
+            target.Add(new StringField(TypeHierarchyHelper.TypeFieldName,
+                TypeHierarchyHelper.GetTypeIdentifier(actualType), Field.Store.YES));
+
+            foreach (var type in TypeHierarchyHelper.GetTypeHierarchy(actualType))
+            {
+                target.Add(new StringField(TypeHierarchyHelper.TypeHierarchyFieldName,
+                    TypeHierarchyHelper.GetTypeFilterValue(type), Field.Store.YES));
             }
         }
 
@@ -151,9 +196,25 @@ namespace Lucene.Net.Linq.Mapping
 
         public virtual bool IsModified(T item, Document document)
         {
+            // If the item is a subtype, delegate to the subtype's mapper
+            // so that subtype-specific fields are included in the comparison.
+            var actualType = item.GetType();
+            if (PolymorphicMapperRegistry != null && actualType != typeof(T) && typeof(T).IsAssignableFrom(actualType))
+            {
+                return PolymorphicMapperRegistry.IsModified(item, document);
+            }
+
+            return IsModifiedCore(item, document);
+        }
+
+        /// <summary>
+        /// Compares the item's field values against the stored document
+        /// using this mapper's field map. Does not perform polymorphic dispatch.
+        /// </summary>
+        internal bool IsModifiedCore(T item, Document document)
+        {
             foreach (var field in fieldMap.Values)
             {
-                // IFieldMapper should tell us if the field is transient/non-comparable
                 if (field is ReflectionScoreMapper<T>)
                 {
                     continue;

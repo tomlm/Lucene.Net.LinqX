@@ -34,6 +34,18 @@ namespace Lucene.Net.Linq
 
         protected override TDocument ConvertDocument(Document doc, IQueryExecutionContext context)
         {
+            // Check for polymorphic subtype stored in the document
+            var actualType = TypeHierarchyHelper.ReadActualType(doc);
+            if (actualType != null && actualType != typeof(TDocument) && typeof(TDocument).IsAssignableFrom(actualType))
+            {
+                var mapperBase = mapper as DocumentMapperBase<TDocument>;
+                if (mapperBase?.PolymorphicMapperRegistry != null)
+                {
+                    return (TDocument)mapperBase.PolymorphicMapperRegistry.CreateAndHydrate(actualType, doc, context);
+                }
+            }
+
+            // Default path: use the user-provided factory
             var key = (IDocumentKey) null;
             if (keyConverter != null)
             {
@@ -41,9 +53,7 @@ namespace Lucene.Net.Linq
             }
 
             var item = newItem(key);
-            
             mapper.ToObject(doc, context, item);
-            
             return item;
         }
         
@@ -316,6 +326,8 @@ namespace Lucene.Net.Linq
         {
             return Expression.Lambda<Func<TDocument, T>>(queryModel.SelectClause.Selector, Expression.Parameter(typeof(TDocument)));
         }
+
+        public Type MappedType => typeof(TDocument);
 
         public abstract IFieldMappingInfo GetMappingInfo(string propertyName);
         public abstract IEnumerable<string> AllProperties { get; }

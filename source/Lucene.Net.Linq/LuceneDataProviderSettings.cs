@@ -1,7 +1,5 @@
 using System;
 using Lucene.Net.Index;
-using Lucene.Net.Linq.Fluent;
-using Lucene.Net.Linq.Mapping;
 using Lucene.Net.Search;
 
 namespace Lucene.Net.Linq
@@ -13,17 +11,9 @@ namespace Lucene.Net.Linq
     {
         public LuceneDataProviderSettings()
         {
-            EnableMultipleEntities = true;
             DeletionPolicy = new KeepOnlyLastCommitDeletionPolicy();
             RAMBufferSizeMB = IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB;
         }
-
-        /// <summary>
-        /// Whether to filter searches by <see cref="DocumentKeyAttribute"/>
-        /// and key fields so that multiple entity types can safely share an index.
-        /// Default: <c>true</c>.
-        /// </summary>
-        public bool EnableMultipleEntities { get; set; }
 
         /// <summary>
         /// Specifies the <see cref="IndexDeletionPolicy"/> of the <see cref="IndexWriter"/>.

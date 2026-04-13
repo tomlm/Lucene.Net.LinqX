@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Lucene.Net.Analysis;
 using Lucene.Net.Search;
 
@@ -10,6 +11,11 @@ namespace Lucene.Net.Linq.Mapping
     /// </summary>
     public interface IFieldMappingInfoProvider
     {
+        /// <summary>
+        /// Returns the CLR type that this provider maps documents to.
+        /// </summary>
+        Type MappedType { get; }
+
         /// <summary>
         /// Returns the set of fields defined for the given document.
         /// </summary>

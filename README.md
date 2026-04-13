@@ -42,6 +42,7 @@ multi-targeting `netstandard2.0;net8.0`. Highlights:
 * Complex boolean queries
 * Native pagination using Skip and Take
 * Support storing and querying NumericField
+* Polymorphic type hierarchies: store subtypes, query by base type, get back real types
 * Automatically convert complex types for storing, querying and sorting
 * Custom boost functions using IQueryable<T>.Boost() extension method
 * Sort by standard string, NumericField or any type that implements IComparable
@@ -229,10 +230,8 @@ one of the four primitive numeric types.
 - **`[QueryScore]`** — populate a `float` property with the document's
   relevance score on read. No options.
 - **`[DocumentKey(FieldName, Value)]`** *(class-level, repeatable)* —
-  pins a constant field/value on every document of the class so
-  multiple types can share an index without cross-contamination. The
-  framework also adds an automatic filter to LINQ queries on the type
-  so they only return matching documents.
+  pins a constant field/value on every document of the class. Useful
+  for adding fixed metadata fields. 
 
 ### Fluent (code-first) mapping
 
@@ -303,24 +302,51 @@ silently downgraded for collections in this Lucene.Net 4.8 beta —
 
 ### Document keys
 
-Two related concepts share the name "key":
+**`[Field(Key = true)]`** on one or more properties marks a *primary
+key* — a unique identifier within a document type. Adding a document
+whose key collides with an existing one replaces the old document
+in a single atomic transaction.
 
-- **`[Field(Key = true)]`** on one or more properties marks a *primary
-  key* — a unique identifier within a document type. Adding a document
-  whose key collides with an existing one replaces the old document
-  in a single atomic transaction.
+### Polymorphic type hierarchies
 
-- **`[DocumentKey(FieldName, Value)]`** on the *class* declares a fixed
-  discriminator so multiple unrelated POCO types can share one index.
-  The library appends an automatic filter on every query so that
-  `provider.AsQueryable<Article>()` only sees article documents.
-
-You can disable the discriminator filter for performance if you keep
-each entity type in its own index:
+The library automatically supports inheritance hierarchies.
+This means if you have `class Dog : Animal` and `class Cat : Animal`:
 
 ```csharp
-provider.Settings.EnableMultipleEntities = false;
+// Store mixed subtypes through a base-type session
+using (var session = provider.OpenSession<Animal>())
+{
+    session.Add(new Dog   { Id = "1", Name = "Rex",      Breed = "Shepherd" });
+    session.Add(new Cat   { Id = "2", Name = "Whiskers", Indoor = true });
+    session.Add(new GuideDog { Id = "3", Name = "Buddy", Breed = "Lab", Handler = "John" });
+    session.Commit();
+}
+
+// Query by base type — returns all three, each as its real type
+var animals = provider.AsQueryable<Animal>().ToList();
+// animals[0] is Dog, animals[1] is Cat, animals[2] is GuideDog
+
+// Query by middle type — returns Dog + GuideDog, not Cat
+var dogs = provider.AsQueryable<Dog>().ToList();
+
+// Query by leaf type — returns only GuideDog
+var guides = provider.AsQueryable<GuideDog>().ToList();
 ```
+
+Key behaviors:
+
+- **Subtype-specific fields are fully indexed and hydrated.** A `Dog`
+  stored via `OpenSession<Animal>()` retains its `Breed` property. When
+  read back, `Breed` is populated even when querying as `Animal`.
+- **Dirty tracking works across the hierarchy.** If you query a `Dog`
+  through `ISession<Animal>` and change `Dog.Breed`, the session
+  detects the modification and flushes it on commit.
+- **Same key = same entity.** If a `Dog` and a `Cat` share the same
+  `[Field(Key = true)]` value, the last write wins — they are treated
+  as the same document.
+- **Subtypes must have a parameterless constructor.** The library uses
+  `Activator.CreateInstance` to instantiate the actual runtime type
+  when reading polymorphic documents.
 
 ## Query semantics
 
@@ -487,19 +513,9 @@ don't set one.
 
 ## Note on Performance
 
-Initial versions of the library include a query filter when your entites specify a document key or key field
-in their mappings. The intention of this filter is to ensure that multiple entity types can be stored in a
-single index without unexpected errors.
-
-It has been pointed out that this query filter adds significant overhead to query performance and goes
-against a best practive of using a different index for each type of document being stored.
-
-To maintain backwards compatibility, the feature is left enabled by default, but it can now be disabled
-by doing:
-
-    luceneDataProvider.Settings.EnableMultipleEntities = false;
-
-Future versions of this library may change the default behavior.
+Every query includes a type field to ensure
+that multiple entity types can safely share a single index. This is a
+lightweight `TermQuery` that Lucene evaluates efficiently as a filter.
 
 ## Integration with OData
 

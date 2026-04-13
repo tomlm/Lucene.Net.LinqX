@@ -7,6 +7,8 @@ namespace Lucene.Net.Linq.Tests.Translation.Visitors
 {
     internal class FieldMappingInfoProviderStub : IFieldMappingInfoProvider
     {
+        public Type MappedType => typeof(object);
+
         public IFieldMappingInfo GetMappingInfo(string propertyName)
         {
             return new FakeFieldMappingInfo { FieldName = propertyName };

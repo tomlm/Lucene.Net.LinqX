@@ -44,7 +44,7 @@ namespace Lucene.Net.Linq
         }
 
         /// <summary>
-        /// The Filter (null when <see cref="LuceneDataProviderSettings.EnableMultipleEntities"/> is false)
+        /// The Filter (includes the polymorphic type filter)
         /// that was executed on <see cref="Lucene.Net.Search.IndexSearcher.Search(Lucene.Net.Search.Query,Lucene.Net.Search.Filter,int,Lucene.Net.Search.Sort)"/>
         /// </summary>
         public Filter Filter

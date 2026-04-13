@@ -50,6 +50,7 @@ namespace Lucene.Net.Linq
         private readonly IQueryParser queryParser;
         private readonly Context context;
         private readonly bool writerIsExternal;
+        private readonly PolymorphicMapperRegistry polymorphicMapperRegistry;
 
         private IIndexWriter writer;
 
@@ -109,6 +110,7 @@ namespace Lucene.Net.Linq
 
             queryParser = RelinqQueryParserFactory.CreateQueryParser();
             context = new Context(this.directory, transactionLock);
+            polymorphicMapperRegistry = new PolymorphicMapperRegistry(version, externalAnalyzer);
 
             writerIsExternal = externalWriter != null;
             writer = externalWriter ?? IndexWriter;
@@ -315,6 +317,7 @@ namespace Lucene.Net.Linq
         /// <typeparam name="T">The type of object that will be mapped to <c cref="Document"/>.</typeparam>
         public virtual ISession<T> OpenSession<T>(ObjectLookup<T> lookup, IDocumentMapper<T> documentMapper, IDocumentModificationDetector<T> documentModificationDetector)
         {
+            ConfigurePolymorphicRegistry(documentMapper);
             perFieldAnalyzer.Merge(documentMapper.Analyzer);
 
             return new LuceneSession<T>(
@@ -477,8 +480,17 @@ namespace Lucene.Net.Linq
 
         private LuceneQueryable<T> CreateQueryable<T>(ObjectLookup<T> factory, Context context, IDocumentMapper<T> mapper)
         {
+            ConfigurePolymorphicRegistry(mapper);
             var executor = new LuceneQueryExecutor<T>(context, factory, mapper);
             return new LuceneQueryable<T>(queryParser, executor);
+        }
+
+        private void ConfigurePolymorphicRegistry<T>(IDocumentMapper<T> mapper)
+        {
+            if (mapper is DocumentMapperBase<T> mapperBase)
+            {
+                mapperBase.PolymorphicMapperRegistry = polymorphicMapperRegistry;
+            }
         }
 
         private class WarmUpContext : Context

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -34,24 +34,16 @@ namespace Lucene.Net.Linq
 
         protected override TDocument ConvertDocument(Document doc, IQueryExecutionContext context)
         {
-            // Check for polymorphic subtype stored in the document
-            var actualType = TypeHierarchyHelper.ReadActualType(doc);
-            if (actualType != null && actualType != typeof(TDocument) && typeof(TDocument).IsAssignableFrom(actualType))
+            var actualType = TypeHierarchyHelper.ReadActualType(doc) ?? typeof(TDocument);
+
+            var mapperBase = mapper as DocumentMapperBase<TDocument>;
+            if (mapperBase != null)
             {
-                var mapperBase = mapper as DocumentMapperBase<TDocument>;
-                if (mapperBase?.PolymorphicMapperRegistry != null)
-                {
-                    return (TDocument)mapperBase.PolymorphicMapperRegistry.CreateAndHydrate(actualType, doc, context);
-                }
+                return mapperBase.CreateFromDocument(doc, context, actualType, newItem);
             }
 
-            // Default path: use the user-provided factory
-            var key = (IDocumentKey) null;
-            if (keyConverter != null)
-            {
-                key = keyConverter.ToKey(doc);
-            }
-
+            // Fall back for custom IDocumentMapper implementations
+            var key = keyConverter?.ToKey(doc);
             var item = newItem(key);
             mapper.ToObject(doc, context, item);
             return item;

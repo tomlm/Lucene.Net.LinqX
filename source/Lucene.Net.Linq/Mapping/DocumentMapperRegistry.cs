@@ -11,22 +11,45 @@ using Version = Lucene.Net.Util.LuceneVersion;
 namespace Lucene.Net.Linq.Mapping
 {
     /// <summary>
-    /// Thread-safe cache of document mappers keyed by runtime type.
-    /// Provides polymorphic hydration, serialization, and modification
-    /// detection without exposing generic type parameters to callers.
+    /// Factory delegate that creates a document mapper for a given entity type.
+    /// The returned object must be a <c>DocumentMapperBase&lt;T&gt;</c> where
+    /// <c>T</c> is <paramref name="entityType"/>.
     /// </summary>
-    internal class PolymorphicMapperRegistry
+    /// <param name="entityType">The CLR type to create a mapper for.</param>
+    /// <param name="version">Lucene compatibility version.</param>
+    /// <param name="externalAnalyzer">Optional external analyzer (may be null).</param>
+    public delegate object DocumentMapperFactory(Type entityType, Version version, Analyzer externalAnalyzer);
+
+    /// <summary>
+    /// Thread-safe cache of document mappers keyed by runtime type.
+    /// Provides hydration, serialization, and modification detection
+    /// across type hierarchies without exposing generic type parameters
+    /// to callers.
+    /// <para>
+    /// Supply a custom <see cref="DocumentMapperFactory"/> to control
+    /// what mapper is created for each type instead of the default
+    /// <see cref="ReflectionDocumentMapper{T}"/>.
+    /// </para>
+    /// </summary>
+    public class DocumentMapperRegistry
     {
-        private static readonly ILogger Log = Logging.CreateLogger(typeof(PolymorphicMapperRegistry));
+        private static readonly ILogger Log = Logging.CreateLogger(typeof(DocumentMapperRegistry));
 
         private readonly ConcurrentDictionary<Type, MapperEntry> mappers = new ConcurrentDictionary<Type, MapperEntry>();
         private readonly Version version;
         private readonly Analyzer externalAnalyzer;
+        private readonly DocumentMapperFactory factory;
 
-        public PolymorphicMapperRegistry(Version version, Analyzer externalAnalyzer)
+        public DocumentMapperRegistry(Version version, Analyzer externalAnalyzer)
+            : this(version, externalAnalyzer, null)
+        {
+        }
+
+        public DocumentMapperRegistry(Version version, Analyzer externalAnalyzer, DocumentMapperFactory factory)
         {
             this.version = version;
             this.externalAnalyzer = externalAnalyzer;
+            this.factory = factory ?? DefaultMapperFactory;
         }
 
         /// <summary>
@@ -44,7 +67,7 @@ namespace Lucene.Net.Linq.Mapping
         /// <summary>
         /// Serializes the source object to a Lucene document using a mapper
         /// built for the object's actual runtime type. Calls MapFieldsToDocument
-        /// on the subtype mapper to avoid re-entering polymorphic dispatch.
+        /// on the mapper to avoid re-entering polymorphic dispatch.
         /// </summary>
         public void MapToDocument(object source, Document target)
         {
@@ -66,9 +89,16 @@ namespace Lucene.Net.Linq.Mapping
         {
             return mappers.GetOrAdd(type, t =>
             {
-                Log.LogDebug("Creating polymorphic mapper for type {Type}", t);
-                return MapperEntry.Create(t, version, externalAnalyzer);
+                Log.LogDebug("Creating mapper for type {Type}", t);
+                var mapper = factory(t, version, externalAnalyzer);
+                return MapperEntry.Create(t, mapper);
             });
+        }
+
+        private static object DefaultMapperFactory(Type entityType, Version version, Analyzer externalAnalyzer)
+        {
+            var mapperType = typeof(ReflectionDocumentMapper<>).MakeGenericType(entityType);
+            return Activator.CreateInstance(mapperType, version, externalAnalyzer);
         }
 
         /// <summary>
@@ -100,15 +130,14 @@ namespace Lucene.Net.Linq.Mapping
             public bool IsModified(object item, Document document)
                 => isModified(item, document);
 
-            public static MapperEntry Create(Type type, Version version, Analyzer externalAnalyzer)
+            public static MapperEntry Create(Type entityType, object mapper)
             {
-                var mapperType = typeof(ReflectionDocumentMapper<>).MakeGenericType(type);
-                var mapper = Activator.CreateInstance(mapperType, version, externalAnalyzer);
+                var mapperType = mapper.GetType();
 
                 return new MapperEntry(
-                    CompileToObject(mapperType, type, mapper),
-                    CompileMapFieldsToDocument(mapperType, type, mapper),
-                    CompileIsModified(mapperType, type, mapper));
+                    CompileToObject(mapperType, entityType, mapper),
+                    CompileMapFieldsToDocument(mapperType, entityType, mapper),
+                    CompileIsModified(mapperType, entityType, mapper));
             }
 
             private static Action<Document, IQueryExecutionContext, object> CompileToObject(

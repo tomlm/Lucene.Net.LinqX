@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +6,7 @@ using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Core;
 using Lucene.Net.Documents;
 using Lucene.Net.Linq.Analysis;
+using Lucene.Net.Linq.Util;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
 using Version = Lucene.Net.Util.LuceneVersion;
@@ -19,6 +20,15 @@ namespace Lucene.Net.Linq.Mapping
         protected readonly Version version;
         protected readonly IDictionary<string, IFieldMapper<T>> fieldMap = new Dictionary<string, IFieldMapper<T>>(StringComparer.Ordinal);
         protected readonly List<IFieldMapper<T>> keyFields = new List<IFieldMapper<T>>();
+
+        /// <summary>
+        /// Registry of document mappers keyed by runtime type.
+        /// Used for polymorphic dispatch: when an object's actual type
+        /// differs from <typeparamref name="T"/>, the registry provides
+        /// the correct mapper for serialization, hydration, and
+        /// modification detection.
+        /// </summary>
+        public DocumentMapperRegistry DocumentMapperRegistry { get; set; }
 
         /// <summary>
         /// Constructs an instance that will create an <see cref="Analyzer"/>
@@ -42,6 +52,8 @@ namespace Lucene.Net.Linq.Mapping
             this.externalAnalyzer = externalAnalyzer;
             this.analyzer = new PerFieldAnalyzer(new KeywordAnalyzer());
         }
+
+        public Type MappedType => typeof(T);
 
         public virtual PerFieldAnalyzer Analyzer
         {
@@ -83,9 +95,40 @@ namespace Lucene.Net.Linq.Mapping
 
         public virtual void ToDocument(T source, Document target)
         {
+            var actualType = source.GetType();
+
+            // If the source is a subtype and we have a registry, delegate to the
+            // subtype's mapper so that subtype-specific properties are captured.
+            if (DocumentMapperRegistry != null && actualType != typeof(T) && typeof(T).IsAssignableFrom(actualType))
+            {
+                DocumentMapperRegistry.MapToDocument(source, target);
+                return;
+            }
+
+            MapFieldsToDocument(source, target);
+        }
+
+        /// <summary>
+        /// Copies all mapped fields from source to target, then writes
+        /// the polymorphic _type_/_types_ internal fields.
+        /// Called directly by <see cref="DocumentMapperRegistry"/> to
+        /// avoid re-entering polymorphic dispatch.
+        /// </summary>
+        public virtual void MapFieldsToDocument(T source, Document target)
+        {
             foreach (var mapping in fieldMap)
             {
                 mapping.Value.CopyToDocument(source, target);
+            }
+
+            var actualType = source.GetType();
+            target.Add(new StringField(TypeUtils.TYPE_FIELD,
+                actualType.FullName, Field.Store.YES));
+
+            foreach (var type in TypeUtils.GetTypeHierarchy(actualType))
+            {
+                target.Add(new StringField(TypeUtils.TYPES_FIELD,
+                    type.FullName, Field.Store.YES));
             }
         }
 
@@ -151,9 +194,25 @@ namespace Lucene.Net.Linq.Mapping
 
         public virtual bool IsModified(T item, Document document)
         {
+            // If the item is a subtype, delegate to the subtype's mapper
+            // so that subtype-specific fields are included in the comparison.
+            var actualType = item.GetType();
+            if (DocumentMapperRegistry != null && actualType != typeof(T) && typeof(T).IsAssignableFrom(actualType))
+            {
+                return DocumentMapperRegistry.IsModified(item, document);
+            }
+
+            return IsModifiedCore(item, document);
+        }
+
+        /// <summary>
+        /// Compares the item's field values against the stored document
+        /// using this mapper's field map. Does not perform polymorphic dispatch.
+        /// </summary>
+        internal bool IsModifiedCore(T item, Document document)
+        {
             foreach (var field in fieldMap.Values)
             {
-                // IFieldMapper should tell us if the field is transient/non-comparable
                 if (field is ReflectionScoreMapper<T>)
                 {
                     continue;
@@ -195,6 +254,39 @@ namespace Lucene.Net.Linq.Mapping
             }
 
             return Equals(val1, val2);
+        }
+
+        /// <summary>
+        /// Creates and hydrates an object from a Lucene document.
+        /// Override this to control object instantiation — for example,
+        /// to deserialize from a stored JSON field instead of mapping
+        /// individual fields.
+        /// </summary>
+        /// <param name="source">The Lucene document.</param>
+        /// <param name="context">Query execution context.</param>
+        /// <param name="actualType">The concrete runtime type resolved from the
+        /// stored <c>_type_</c> field. Equals <c>typeof(T)</c> when no subtype is
+        /// stored, or <c>null</c> for legacy documents without type information.</param>
+        /// <param name="factory">The factory delegate provided when the session or
+        /// queryable was created. The default implementation uses this to create
+        /// instances of <c>T</c>; subtypes use <c>Activator.CreateInstance</c>.</param>
+        /// <returns>A fully hydrated instance of <paramref name="actualType"/> (or <c>T</c>).</returns>
+        public virtual T CreateFromDocument(Document source, IQueryExecutionContext context, Type actualType, ObjectLookup<T> factory)
+        {
+            // If the actual type is a subtype, delegate to the registry
+            // which has a mapper that knows the subtype's fields.
+            if (DocumentMapperRegistry != null
+                && actualType != null
+                && actualType != typeof(T)
+                && typeof(T).IsAssignableFrom(actualType))
+            {
+                return (T)DocumentMapperRegistry.CreateAndHydrate(actualType, source, context);
+            }
+
+            var key = (this as IDocumentKeyConverter)?.ToKey(source);
+            var item = factory(key);
+            ToObject(source, context, item);
+            return item;
         }
 
         public void AddField(IFieldMapper<T> fieldMapper)

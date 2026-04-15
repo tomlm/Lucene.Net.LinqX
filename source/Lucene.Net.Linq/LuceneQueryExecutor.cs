@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -34,16 +34,18 @@ namespace Lucene.Net.Linq
 
         protected override TDocument ConvertDocument(Document doc, IQueryExecutionContext context)
         {
-            var key = (IDocumentKey) null;
-            if (keyConverter != null)
+            var mapperBase = mapper as DocumentMapperBase<TDocument>;
+            if (mapperBase != null)
             {
-                key = keyConverter.ToKey(doc);
+                var typeString = doc.Get(TypeUtils.TYPE_FIELD);
+                var actualType = TypeUtils.ResolveType(typeString);
+                return mapperBase.CreateFromDocument(doc, context, actualType, newItem);
             }
 
+            // Fall back for custom IDocumentMapper implementations
+            var key = keyConverter?.ToKey(doc);
             var item = newItem(key);
-            
             mapper.ToObject(doc, context, item);
-            
             return item;
         }
         
@@ -316,6 +318,8 @@ namespace Lucene.Net.Linq
         {
             return Expression.Lambda<Func<TDocument, T>>(queryModel.SelectClause.Selector, Expression.Parameter(typeof(TDocument)));
         }
+
+        public Type MappedType => typeof(TDocument);
 
         public abstract IFieldMappingInfo GetMappingInfo(string propertyName);
         public abstract IEnumerable<string> AllProperties { get; }

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using Lucene.Net.Index;
 using Lucene.Net.Linq.Clauses;
 using Lucene.Net.Linq.Mapping;
 using Lucene.Net.Linq.Translation.ResultOperatorHandlers;
@@ -27,11 +27,8 @@ namespace Lucene.Net.Linq.Translation
         public void Build(QueryModel queryModel)
         {
             queryModel.Accept(this);
-            
-            if (context.Settings.EnableMultipleEntities)
-            {
-                CreateQueryFilterForKeyFields();    
-            }
+
+            AddPolymorphicTypeFilter();
         }
 
         public LuceneQueryModel Model
@@ -93,22 +90,25 @@ namespace Lucene.Net.Linq.Translation
             model.AddQueryStatisticsCallback(clause.Callback);
         }
 
-        private void CreateQueryFilterForKeyFields()
+        private void AddPolymorphicTypeFilter()
         {
-            var filterQuery = fieldMappingInfoProvider.KeyProperties.Aggregate(
-                new BooleanQuery(),
-                (query, property) =>
-                    {
-                        var fieldMappingInfo = fieldMappingInfoProvider.GetMappingInfo(property);
-                        
-                        query.Add(fieldMappingInfo.CreateQuery("*"), Occur.MUST);
-                        return query;
-                    });
+            var mappedType = fieldMappingInfoProvider.MappedType;
+            if (mappedType == null) return;
 
-            if (filterQuery.Clauses.Any())
+            var typeQuery = new TermQuery(new Term(TypeUtils.TYPES_FIELD, mappedType.FullName));
+
+            if (model.Filter != null)
             {
-                model.Filter = new QueryWrapperFilter(filterQuery);
+                var combined = new BooleanQuery();
+                combined.Add(new BooleanClause(typeQuery, Occur.MUST));
+                combined.Add(new BooleanClause(new ConstantScoreQuery(model.Filter), Occur.MUST));
+                model.Filter = new QueryWrapperFilter(combined);
+            }
+            else
+            {
+                model.Filter = new QueryWrapperFilter(typeQuery);
             }
         }
+
     }
 }

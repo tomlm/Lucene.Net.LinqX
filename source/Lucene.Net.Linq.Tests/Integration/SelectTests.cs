@@ -35,33 +35,6 @@ namespace Lucene.Net.Linq.Tests.Integration
             Assert.That(result.FirstOrDefault().Name, Is.EqualTo(d.Name));
         }
 
-        [DocumentKey(FieldName = "FixedKey", Value = "SampleDocument")]
-        class AlternateDocument
-        {
-            [Field(Key = true)]
-            public string Key { get; set; }
-
-            [Field("Name")]
-            public string AlternateName { get; set; }
-        }
-
-        [Test]
-        public void StoresAndRetrievesByFieldName()
-        {
-            var d = new AlternateDocument { AlternateName = "My Document", Key = "0" };
-            using (var session = provider.OpenSession<AlternateDocument>())
-            {
-                session.Add(d);
-                session.Commit();
-            }
-
-            var documents = provider.AsQueryable<SampleDocument>();
-
-            var result = from doc in documents select doc;
-
-            Assert.That(result.FirstOrDefault().Name, Is.EqualTo(d.AlternateName));
-        }
-
         [Test]
         public void SelectScalar()
         {

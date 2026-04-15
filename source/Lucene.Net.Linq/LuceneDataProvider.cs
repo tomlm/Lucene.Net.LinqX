@@ -50,6 +50,7 @@ namespace Lucene.Net.Linq
         private readonly IQueryParser queryParser;
         private readonly Context context;
         private readonly bool writerIsExternal;
+        private DocumentMapperRegistry documentMapperRegistry;
 
         private IIndexWriter writer;
 
@@ -122,6 +123,24 @@ namespace Lucene.Net.Linq
             get { return context.Settings; }
             set { context.Settings = value; }
         }
+
+        /// <summary>
+        /// Factory delegate used to create document mappers for types
+        /// encountered at runtime (e.g. polymorphic subtypes).
+        /// Set this before any queries or sessions to use custom mappers
+        /// instead of the default <see cref="Mapping.ReflectionDocumentMapper{T}"/>.
+        /// </summary>
+        public DocumentMapperFactory MapperFactory
+        {
+            get { return mapperFactory; }
+            set
+            {
+                mapperFactory = value;
+                // Reset so next access picks up the new factory
+                documentMapperRegistry = null;
+            }
+        }
+        private DocumentMapperFactory mapperFactory;
 
         /// <summary>
         /// Create a <see cref="Lucene.Net.QueryParsers.Classic.QueryParser"/> suitable for parsing advanced queries
@@ -315,6 +334,7 @@ namespace Lucene.Net.Linq
         /// <typeparam name="T">The type of object that will be mapped to <c cref="Document"/>.</typeparam>
         public virtual ISession<T> OpenSession<T>(ObjectLookup<T> lookup, IDocumentMapper<T> documentMapper, IDocumentModificationDetector<T> documentModificationDetector)
         {
+            ConfigureDocumentMapperRegistry(documentMapper);
             perFieldAnalyzer.Merge(documentMapper.Analyzer);
 
             return new LuceneSession<T>(
@@ -477,8 +497,21 @@ namespace Lucene.Net.Linq
 
         private LuceneQueryable<T> CreateQueryable<T>(ObjectLookup<T> factory, Context context, IDocumentMapper<T> mapper)
         {
+            ConfigureDocumentMapperRegistry(mapper);
             var executor = new LuceneQueryExecutor<T>(context, factory, mapper);
             return new LuceneQueryable<T>(queryParser, executor);
+        }
+
+        private void ConfigureDocumentMapperRegistry<T>(IDocumentMapper<T> mapper)
+        {
+            if (mapper is DocumentMapperBase<T> mapperBase)
+            {
+                if (documentMapperRegistry == null)
+                {
+                    documentMapperRegistry = new DocumentMapperRegistry(version, externalAnalyzer, mapperFactory);
+                }
+                mapperBase.DocumentMapperRegistry = documentMapperRegistry;
+            }
         }
 
         private class WarmUpContext : Context

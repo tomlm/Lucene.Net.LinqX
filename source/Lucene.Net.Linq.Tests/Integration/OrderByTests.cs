@@ -153,7 +153,7 @@ namespace Lucene.Net.Linq.Tests.Integration
         [Test]
         public void OrderBy_ScoreProperty()
         {
-            AddTestScoreDocuments();
+            AddTestScoreDocumentsAsScoreTracking();
 
             var documents = provider.AsQueryable<ScoreTrackingSampleDocument>();
 
@@ -165,7 +165,7 @@ namespace Lucene.Net.Linq.Tests.Integration
         [Test]
         public void OrderBy_ScoreProperty_Desc()
         {
-            AddTestScoreDocuments();
+            AddTestScoreDocumentsAsScoreTracking();
 
             var documents = provider.AsQueryable<ScoreTrackingSampleDocument>();
 
@@ -190,6 +190,13 @@ namespace Lucene.Net.Linq.Tests.Integration
             AddDocument(new SampleDocument { Name = "apple apple apple apple apple apple ", Scalar = 3, Flag = true, Version = new Version(100, 0, 0) });
             AddDocument(new SampleDocument { Name = "banana banana banana banana apple banana banana banana ", Scalar = 1, Flag = false, Version = new Version(20, 0, 0) });
             AddDocument(new SampleDocument { Name = "apple pie apple sauce", Scalar = 2, Flag = true, Version = new Version(3, 0, 0) });
+        }
+
+        private void AddTestScoreDocumentsAsScoreTracking()
+        {
+            AddDocument(new ScoreTrackingSampleDocument { Name = "apple apple apple apple apple apple ", Scalar = 3, Flag = true, Version = new Version(100, 0, 0) });
+            AddDocument(new ScoreTrackingSampleDocument { Name = "banana banana banana banana apple banana banana banana ", Scalar = 1, Flag = false, Version = new Version(20, 0, 0) });
+            AddDocument(new ScoreTrackingSampleDocument { Name = "apple pie apple sauce", Scalar = 2, Flag = true, Version = new Version(3, 0, 0) });
         }
     }
 }

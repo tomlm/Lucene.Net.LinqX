@@ -1,6 +1,7 @@
 using System;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
+using Microsoft.Extensions.AI;
 
 namespace Lucene.Net.Linq
 {
@@ -40,5 +41,13 @@ namespace Lucene.Net.Linq
         /// so the writer is no longer available to the factory.
         /// </remarks>
         public Func<MergePolicy> MergePolicyBuilder { get; set; }
+
+        /// <summary>
+        /// An embedding generator used to convert text into vector embeddings
+        /// for properties marked with <see cref="Mapping.VectorFieldAttribute"/>.
+        /// When set, text is automatically embedded at index time and queries
+        /// using <see cref="LuceneMethods.Similar"/> generate embeddings at query time.
+        /// </summary>
+        public IEmbeddingGenerator<string, Embedding<float>> EmbeddingGenerator { get; set; }
     }
 }

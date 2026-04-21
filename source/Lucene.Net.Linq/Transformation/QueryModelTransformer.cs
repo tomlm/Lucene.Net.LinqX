@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Lucene.Net.Linq.Clauses.Expressions;
 using Lucene.Net.Linq.Transformation.Visitors;
 using Lucene.Net.Linq.Util;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Remotion.Linq;
 using Remotion.Linq.Clauses;
@@ -37,10 +38,10 @@ namespace Lucene.Net.Linq.Transformation
                            new FlagToBinaryConditionVisitor(),
                            new BooleanBinaryToQueryPredicateExpressionVisitor(),
                            new BinaryToQueryExpressionVisitor(),
-                           new RangeQueryMergeExpressionVisitor(), 
+                           new RangeQueryMergeExpressionVisitor(),
                            new AllowSpecialCharactersMethodExpressionVisitor(),
                            new BoostMethodCallVisitor(1),
-                           new FuzzyMethodCallVisitor()
+                           new FuzzyMethodCallVisitor(),
                        },
                    new LuceneExpressionVisitor[]
                        {
@@ -63,7 +64,45 @@ namespace Lucene.Net.Linq.Transformation
         public static void TransformQueryModel(QueryModel queryModel)
         {
             var instance = new QueryModelTransformer();
+            queryModel.Accept(instance);
+        }
 
+        public static void TransformQueryModel(QueryModel queryModel,
+            IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator)
+        {
+            var visitors = new LuceneExpressionVisitor[]
+            {
+                new SubQueryContainsVisitor(),
+                new LuceneExtensionMethodCallVisitor(),
+                new ExternallyProvidedQueryExpressionVisitor(),
+                new QuerySourceReferencePropertyTransformingVisitor(),
+                new BoostMethodCallVisitor(0),
+                new NoOpMethodCallRemovingVisitor(),
+                new NoOpConditionRemovingVisitor(),
+                new NullSafetyConditionRemovingVisitor(),
+                new NoOpConvertExpressionRemovingVisitor(),
+                new EnumerableContainsToTermsFilterVisitor(),
+                new MethodCallToLuceneQueryPredicateExpressionVisitor(),
+                new CompareCallToLuceneQueryPredicateExpressionVisitor(),
+                new FlagToBinaryConditionVisitor(),
+                new BooleanBinaryToQueryPredicateExpressionVisitor(),
+                new BinaryToQueryExpressionVisitor(),
+                new RangeQueryMergeExpressionVisitor(),
+                new AllowSpecialCharactersMethodExpressionVisitor(),
+                new BoostMethodCallVisitor(1),
+                new FuzzyMethodCallVisitor(),
+                new SimilarMethodCallVisitor(embeddingGenerator),
+            };
+            var orderingVisitors = new LuceneExpressionVisitor[]
+            {
+                new LuceneExtensionMethodCallVisitor(),
+                new BoostMethodCallVisitor(1),
+                new QuerySourceReferencePropertyTransformingVisitor(),
+                new NoOpMethodCallRemovingVisitor(),
+                new NullSafetyConditionRemovingVisitor(),
+                new ConcatToCompositeOrderingExpressionVisitor()
+            };
+            var instance = new QueryModelTransformer(visitors, orderingVisitors);
             queryModel.Accept(instance);
         }
 

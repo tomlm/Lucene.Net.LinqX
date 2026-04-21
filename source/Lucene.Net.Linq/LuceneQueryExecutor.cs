@@ -7,6 +7,7 @@ using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Linq.Mapping;
 using Lucene.Net.Linq.ScalarResultHandlers;
+using Lucene.Net.Linq.Search;
 using Lucene.Net.Linq.Search.Function;
 using Lucene.Net.Linq.Transformation;
 using Lucene.Net.Linq.Translation;
@@ -124,7 +125,8 @@ namespace Lucene.Net.Linq
                 var skipResults = luceneQueryModel.SkipResults;
                 var maxResults = Math.Min(luceneQueryModel.MaxResults, searcher.IndexReader.MaxDoc - skipResults);
 
-                var executionContext = new QueryExecutionContext(searcher, luceneQueryModel.Query, luceneQueryModel.Filter);
+                var resolvedQuery = ResolveVectorQueries(luceneQueryModel.Query, searcher.IndexReader);
+                var executionContext = new QueryExecutionContext(searcher, resolvedQuery, luceneQueryModel.Filter);
                 TopFieldDocs hits;
 
                 TimeSpan elapsedPreparationTime;
@@ -212,7 +214,7 @@ namespace Lucene.Net.Linq
                 var searcher = searcherHandle.Searcher;
                 var skipResults = luceneQueryModel.SkipResults;
                 var maxResults = Math.Min(luceneQueryModel.MaxResults, searcher.IndexReader.MaxDoc - skipResults);
-                var query = luceneQueryModel.Query;
+                var query = ResolveVectorQueries(luceneQueryModel.Query, searcher.IndexReader);
 
                 var scoreFunction = luceneQueryModel.GetCustomScoreFunction<TDocument>();
                 if (scoreFunction != null)
@@ -484,14 +486,40 @@ namespace Lucene.Net.Linq
 
         private LuceneQueryModel PrepareQuery(QueryModel queryModel)
         {
-            QueryModelTransformer.TransformQueryModel(queryModel);
+            QueryModelTransformer.TransformQueryModel(queryModel, context.Settings.EmbeddingGenerator);
 
             var builder = new QueryModelTranslator(this, context);
             builder.Build(queryModel);
-            
+
             Log.LogDebug("Lucene query: {Model}", builder.Model);
 
             return builder.Model;
+        }
+
+        /// <summary>
+        /// Walks a query tree and replaces any <see cref="DeferredKnnVectorQuery"/>
+        /// instances with resolved <c>KnnVectorQuery</c> using the provided reader.
+        /// </summary>
+        internal static Query ResolveVectorQueries(Query query, IndexReader reader)
+        {
+            if (query is DeferredKnnVectorQuery deferred)
+            {
+                return deferred.Resolve(reader);
+            }
+
+            if (query is BooleanQuery booleanQuery)
+            {
+                var resolved = new BooleanQuery();
+                foreach (var clause in booleanQuery.GetClauses())
+                {
+                    var resolvedQuery = ResolveVectorQueries(clause.Query, reader);
+                    resolved.Add(resolvedQuery, clause.Occur);
+                }
+                resolved.Boost = booleanQuery.Boost;
+                return resolved;
+            }
+
+            return query;
         }
 
         protected virtual Expression<Func<TDocument, T>> GetProjector<T>(QueryModel queryModel)

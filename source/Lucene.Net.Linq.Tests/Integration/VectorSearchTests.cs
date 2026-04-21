@@ -364,6 +364,21 @@ namespace Lucene.Net.Linq.Tests.Integration
         }
 
         [Test]
+        public void Similar_NullQueryText_ThrowsInvalidOperationException()
+        {
+            string nullText = null;
+            Assert.Throws<InvalidOperationException>(() =>
+                Documents.Where(d => d.Title.Similar(nullText)).ToList());
+        }
+
+        [Test]
+        public void Similar_EmptyQueryText_ThrowsInvalidOperationException()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+                Documents.Where(d => d.Title.Similar("")).ToList());
+        }
+
+        [Test]
         public void Similar_AllDocumentsRetrievable()
         {
             // Verify that documents indexed with vectors can still be queried normally

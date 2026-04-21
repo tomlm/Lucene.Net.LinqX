@@ -41,12 +41,18 @@ namespace Lucene.Net.Linq.Transformation.Visitors
             var queryText = EvaluateExpression<string>(expression.Arguments[1]);
             var k = EvaluateExpression<int>(expression.Arguments[2]);
 
+            if (string.IsNullOrEmpty(queryText))
+            {
+                throw new InvalidOperationException(
+                    "Similar() requires a non-null, non-empty query text.");
+            }
+
             var vector = GenerateEmbedding(queryText);
 
             // The vector field is named {FieldName}_vector
             var vectorFieldName = fieldName + "_vector";
 
-            return new LuceneVectorQueryExpression(vectorFieldName, vector, k, 16, 50);
+            return new LuceneVectorQueryExpression(vectorFieldName, vector, k);
         }
 
         private string ExtractFieldName(Expression expression)

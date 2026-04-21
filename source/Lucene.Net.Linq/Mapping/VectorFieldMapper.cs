@@ -15,7 +15,7 @@ namespace Lucene.Net.Linq.Mapping
     /// and adds a companion <c>BinaryDocValuesField</c> that stores the vector embedding.
     /// The vector field is named <c>{FieldName}_vector</c>.
     /// </summary>
-    public class VectorFieldMapper<T> : IFieldMapper<T>
+    public class VectorFieldMapper<T> : IFieldMapper<T>, IVectorFieldMappingInfo
     {
         private readonly ReflectionFieldMapper<T> inner;
         private readonly IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator;
@@ -100,17 +100,10 @@ namespace Lucene.Net.Linq.Mapping
 
         private float[] GenerateEmbedding(string text)
         {
-            try
+            var result = Task.Run(() => embeddingGenerator.GenerateAsync(new[] { text })).GetAwaiter().GetResult();
+            if (result != null && result.Count > 0)
             {
-                var result = Task.Run(() => embeddingGenerator.GenerateAsync(new[] { text })).GetAwaiter().GetResult();
-                if (result != null && result.Count > 0)
-                {
-                    return result[0].Vector.ToArray();
-                }
-            }
-            catch
-            {
-                // If embedding generation fails, the document is still indexed without the vector.
+                return result[0].Vector.ToArray();
             }
             return null;
         }

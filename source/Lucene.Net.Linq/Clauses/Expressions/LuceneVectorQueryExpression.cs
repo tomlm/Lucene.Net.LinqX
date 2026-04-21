@@ -10,13 +10,11 @@ namespace Lucene.Net.Linq.Clauses.Expressions
     /// </summary>
     internal class LuceneVectorQueryExpression : Expression
     {
-        internal LuceneVectorQueryExpression(string fieldName, float[] queryVector, int k, int m, int efSearch)
+        internal LuceneVectorQueryExpression(string fieldName, float[] queryVector, int k)
         {
             FieldName = fieldName;
             QueryVector = queryVector;
             K = k;
-            M = m;
-            EfSearch = efSearch;
         }
 
         public override ExpressionType NodeType => ExpressionType.Extension;
@@ -26,8 +24,6 @@ namespace Lucene.Net.Linq.Clauses.Expressions
         public string FieldName { get; }
         public float[] QueryVector { get; }
         public int K { get; }
-        public int M { get; }
-        public int EfSearch { get; }
 
         protected override Expression VisitChildren(ExpressionVisitor visitor)
         {

@@ -141,12 +141,11 @@ namespace Lucene.Net.Linq
         /// configured with <see cref="Mapping.VectorFieldAttribute"/> or via the
         /// fluent <c>AsVectorField()</c> API. The <paramref name="queryText"/> is
         /// embedded at query time and a KNN search is executed against the vector
-        /// index.
+        /// index. Use <c>.Take(n)</c> on the query to limit results.
         /// </summary>
         /// <param name="property">The string property to search (must have a vector field configured).</param>
         /// <param name="queryText">The text to embed and search for similar documents.</param>
-        /// <param name="k">Number of nearest neighbors to return. Default: 10.</param>
-        public static bool Similar(this string property, string queryText, int k = 10)
+        public static bool Similar(this string property, string queryText)
         {
             throw new InvalidOperationException(UnreachableCode);
         }

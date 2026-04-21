@@ -118,24 +118,7 @@ namespace Lucene.Net.Linq.Translation.Visitors
 
         protected override Expression VisitLuceneVectorQueryExpression(LuceneVectorQueryExpression expression)
         {
-            // The vector field name is "{property}_vector"; look up the original property
-            // to read M/EfSearch from the VectorFieldMapper configuration.
-            var propertyFieldName = expression.FieldName.EndsWith("_vector")
-                ? expression.FieldName.Substring(0, expression.FieldName.Length - "_vector".Length)
-                : expression.FieldName;
-
-            int m = 16;
-            int efSearch = 50;
-
-            var mapping = fieldMappingInfoProvider.GetMappingInfo(propertyFieldName);
-            if (mapping is Mapping.IVectorFieldMappingInfo vectorMapping)
-            {
-                m = vectorMapping.HnswM;
-                efSearch = vectorMapping.HnswEfSearch;
-            }
-
-            var deferred = new DeferredKnnVectorQuery(
-                expression.FieldName, expression.QueryVector, expression.K, m, efSearch);
+            var deferred = new DeferredVectorQuery(expression.FieldName, expression.QueryVector);
 
             var booleanQuery = new BooleanQuery();
             booleanQuery.Add(deferred, Occur.MUST);

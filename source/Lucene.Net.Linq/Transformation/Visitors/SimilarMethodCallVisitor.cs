@@ -14,7 +14,7 @@ namespace Lucene.Net.Linq.Transformation.Visitors
     internal class SimilarMethodCallVisitor : MethodInfoMatchingVisitor
     {
         private static readonly MethodInfo SimilarMethod =
-            Util.Reflection.MethodOf<bool>(() => LuceneMethods.Similar(null, null, 0));
+            Util.Reflection.MethodOf<bool>(() => LuceneMethods.Similar(null, null));
 
         private readonly IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator;
 
@@ -32,14 +32,12 @@ namespace Lucene.Net.Linq.Transformation.Visitors
                     "Cannot use Similar() without configuring an IEmbeddingGenerator on LuceneDataProviderSettings.EmbeddingGenerator.");
             }
 
-            // expression is: LuceneMethods.Similar(property, queryText, k)
+            // expression is: LuceneMethods.Similar(property, queryText)
             // Arguments[0] = the string property expression (e.g., x.Title)
             // Arguments[1] = the query text
-            // Arguments[2] = k
 
             var fieldName = ExtractFieldName(expression.Arguments[0]);
             var queryText = EvaluateExpression<string>(expression.Arguments[1]);
-            var k = EvaluateExpression<int>(expression.Arguments[2]);
 
             if (string.IsNullOrEmpty(queryText))
             {
@@ -52,7 +50,7 @@ namespace Lucene.Net.Linq.Transformation.Visitors
             // The vector field is named {FieldName}_vector
             var vectorFieldName = fieldName + "_vector";
 
-            return new LuceneVectorQueryExpression(vectorFieldName, vector, k);
+            return new LuceneVectorQueryExpression(vectorFieldName, vector);
         }
 
         private string ExtractFieldName(Expression expression)

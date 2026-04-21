@@ -25,7 +25,7 @@ multi-targeting `netstandard2.0;net8.0`. Highlights:
 
 ### New 4.x features
 
-- **Vector similarity search** (KNN) via `.Similar()` with automatic embedding at index and query time (.NET 10+)
+- **Vector similarity search** via `.Similar()` with automatic embedding at index and query time
 - **Multi-targeting**: the library builds for `netstandard2.0` and
   `net8.0`/'net10.0'; 
 - **Polymorphic select** - searching for a base type always properly instantiated object types of the original type.
@@ -40,7 +40,7 @@ multi-targeting `netstandard2.0;net8.0`. Highlights:
   beta lacks `SortedNumericDocValuesField`.
 
 ### Features
-* **Vector similarity search** (KNN) via `.Similar()` with automatic embedding at index and query time (.NET 10+)
+* **Vector similarity search** via `.Similar()` with automatic embedding at index and query time
 * Automatically converts PONOs to Documents and back
 * Add, delete and update documents in atomic transaction
 * Unit of Work pattern automatically tracks and flushes updated documents
@@ -298,7 +298,7 @@ at translation time with a clear message.
 | `Any()` / `Any(predicate)` | `TotalHits > 0` |
 | `Count()` / `LongCount()` | `TotalHits` |
 | `Min` / `Max` | `Sort` ascending/descending + `Take(1)` |
-| `Where(d => d.Field.Similar("text", k))` | `KnnVectorQuery` (.NET 10+) |
+| `Where(d => d.Field.Similar("text"))` | `KnnVectorQuery`/`CosineSimulatoryScoreQuery` |
 | `Select(d => new { ... })` | Document projection (read only the fields you reference) |
 
 ### Collection Contains ("IN" queries)
@@ -533,12 +533,12 @@ The library logs query translation steps, cache reload events, and
 session commit summaries. Defaults to `NullLoggerFactory` if you
 don't set one.
 
-## Vector Similarity Search (.NET 10+)
+## Vector Similarity Search
 
-The library now supports KNN vector similarity search. String properties are can opt-in by adding attributes/setting mapping.
-
-> The actual KNN execution requires .NET 10 or later; 
-> on older TFMs the API surface is present but throws `NotSupportedException` at runtime.
+The library supports vector similarity search. String properties can
+opt in via `[VectorField]` or the fluent `.AsVectorField()` API. Embeddings
+are automatiocally computed at index time and ranked by similarity at
+query time using `.Similar()`.
 
 ### Configuring an embedding generator
 
@@ -546,7 +546,7 @@ Vector search requires an `IEmbeddingGenerator<string, Embedding<float>>`
 (from `Microsoft.Extensions.AI`). Any implementation works --
 OpenAI, Azure OpenAI, Ollama, or a local model. For local / offline
 scenarios, [ElBruno.LocalEmbeddings](https://nuget.org/packages/ElBruno.LocalEmbeddings)
-is a good choice, it's < 20mb and works great offline.
+is a good choice -- under 20 MB and works great offline:
 
 ```csharp
 using ElBruno.LocalEmbeddings;
@@ -557,19 +557,14 @@ var generator = new LocalEmbeddingGenerator(new LocalEmbeddingsOptions
     ModelName = "SmartComponents/bge-micro-v2",
     PreferQuantized = true
 });
-```
 
-Pass the generator to the data provider so it is available for both
-indexing and querying:
-
-```csharp
 var provider = new LuceneDataProvider(directory, LuceneVersion.LUCENE_48);
 provider.Settings.EmbeddingGenerator = generator;
 ```
 
 ### Attribute mapping
 
-Add `[VectorField]` alongside `[Field]` on any string property to enable to to be searched with .Similar() operator.
+Add `[VectorField]` alongside `[Field]` on any string property:
 
 ```csharp
 public class Article
@@ -585,17 +580,7 @@ public class Article
 }
 ```
 
-`[VectorField]` exposes three optional tuning knobs:
-
-| Option | Default | Notes |
-| --- | --- | --- |
-| `K` | `10` | Number of nearest neighbors returned by KNN queries. |
-| `M` | `16` | HNSW graph parameter: max edges per node. |
-| `EfSearch` | `50` | HNSW graph parameter: search quality. |
-
 ### Fluent mapping
-
-Use `AsVectorField()` on any string property:
 
 ```csharp
 public class ArticleMap : ClassMap<Article>
@@ -603,47 +588,34 @@ public class ArticleMap : ClassMap<Article>
     public ArticleMap() : base(LuceneVersion.LUCENE_48)
     {
         Key(a => a.Id);
-        Property(a => a.Title)
-            .AsVectorField();
+        Property(a => a.Title).AsVectorField();
     }
 }
 ```
 
-
 ### Querying with `.Similar()`
 
-Use the `Similar()` extension method inside a LINQ `Where` clause to search based on similarity.
+Use `.Similar()` inside a `Where` clause to rank results by
+similarity. Use `.Take()` to limit how many come back:
 
 ```csharp
-// Find the 5 most similar articles
 var results = provider.AsQueryable<Article>()
     .Where(a => a.Title.Similar("a cute cat napping"))
+    .Take(5)
     .ToList();
 ```
 
-`.Similar()` composes with standard LINQ predicates for hybrid
-vector + keyword queries:
+`.Similar()` composes naturally with other predicates. Filters are
+applied first, then matching documents are ranked by similarity:
 
 ```csharp
-// Vector similarity filtered by category
+// Only animals, ranked by similarity
 var results = provider.AsQueryable<Article>()
-    .Where(a => a.Title.Similar("furry animals in nature")
-             && a.Category == "animals")
-    .ToList();
-```
-
-It also works with `Take`, `Skip`, `Select`, and other LINQ operators:
-
-```csharp
-var top3 = provider.AsQueryable<Article>()
-    .Where(a => a.Title.Similar("machine learning"))
+    .Where(a => a.Title.Similar("furry animals") && a.Category == "animals")
     .Take(3)
-    .Select(a => new { a.Id, a.Title })
     .ToList();
 ```
 
-> **Note:** Calling `.Similar()` without an embedding generator
-> configured throws `InvalidOperationException` at query time.
 
 
 ## Integration with OData

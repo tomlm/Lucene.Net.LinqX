@@ -8,7 +8,7 @@ using Microsoft.Extensions.AI;
 using NUnit.Framework;
 using System.Reflection.Emit;
 
-#if NET10_0
+#if NET8_0_OR_GREATER
 using ElBruno.LocalEmbeddings;
 using ElBruno.LocalEmbeddings.Options;
 using Lucene.Net.Analysis.Standard;
@@ -33,7 +33,7 @@ namespace Lucene.Net.Linq.Tests.Integration
     public class VectorFieldMappingTests : IntegrationTestBase
     {
         private static readonly IEmbeddingGenerator<string, Embedding<float>> generator =
-#if NET10_0
+#if NET8_0_OR_GREATER
         new LocalEmbeddingGenerator(new LocalEmbeddingsOptions
         {
             ModelName = "SmartComponents/bge-micro-v2",
@@ -83,7 +83,7 @@ namespace Lucene.Net.Linq.Tests.Integration
             Assert.That(hits.TotalHits, Is.GreaterThan(0));
 
             var doc = searcher.Doc(hits.ScoreDocs[0].Doc);
-#if NET10_0
+#if NET8_0_OR_GREATER
             var vectorBytes = doc.GetBinaryValue("Title_vector");
             Assert.That(vectorBytes, Is.Not.Null, "Expected Title_vector StoredField to be present");
             Assert.That(vectorBytes.Length, Is.GreaterThan(0));
@@ -125,7 +125,7 @@ namespace Lucene.Net.Linq.Tests.Integration
             var searcher = handle.Searcher;
             var hits = searcher.Search(new Lucene.Net.Search.MatchAllDocsQuery(), 10);
             Assert.That(hits.TotalHits, Is.EqualTo(3));
-#if NET_10
+#if NET8_0_OR_GREATER
             for (int i = 0; i < hits.ScoreDocs.Length; i++)
             {
                 var doc = searcher.Doc(hits.ScoreDocs[i].Doc);
@@ -197,7 +197,7 @@ namespace Lucene.Net.Linq.Tests.Integration
     public class VectorSimilaritySearchTests
     {
         private static readonly IEmbeddingGenerator<string, Embedding<float>> generator =
-#if NET10_0
+#if NET8_0_OR_GREATER
             new LocalEmbeddingGenerator(new LocalEmbeddingsOptions
         {
             ModelName = "SmartComponents/bge-micro-v2",
@@ -249,8 +249,8 @@ namespace Lucene.Net.Linq.Tests.Integration
         public void Similar_ReturnsResults()
         {
             var query = Documents
-                .Where(d => d.Title.Similar("a cute cat napping", 5));
-#if NET10_0
+                .Where(d => d.Title.Similar("a cute cat napping"));
+#if NET8_0_OR_GREATER
             var result = query.ToList();
             Assert.That(result, Is.Not.Empty, "Similar() should return results");
 #else
@@ -263,8 +263,8 @@ namespace Lucene.Net.Linq.Tests.Integration
         {
             // "a cute cat napping" should be most similar to "a small kitten sleeping on a warm blanket"
             var query = Documents
-                .Where(d => d.Title.Similar("a cute cat napping", 5));
-#if NET10_0
+                .Where(d => d.Title.Similar("a cute cat napping"));
+#if NET8_0_OR_GREATER
             var result = query.ToList();
             Assert.That(result, Is.Not.Empty);
             Assert.That(result[0].Id, Is.EqualTo("2"),
@@ -278,8 +278,8 @@ namespace Lucene.Net.Linq.Tests.Integration
         public void Similar_ScienceQueryRanksScienceHigher()
         {
             var query = Documents
-                .Where(d => d.Title.Similar("deep learning artificial intelligence", 5));
-#if NET10_0
+                .Where(d => d.Title.Similar("deep learning artificial intelligence"));
+#if NET8_0_OR_GREATER
             var result = query.ToList();
             Assert.That(result, Is.Not.Empty);
             Assert.That(result[0].Category, Is.EqualTo("science"),
@@ -290,11 +290,12 @@ namespace Lucene.Net.Linq.Tests.Integration
         }
 
         [Test]
-        public void Similar_RespectsK()
+        public void Similar_WithTake()
         {
             var query = Documents
-                .Where(d => d.Title.Similar("animals", 2));
-#if NET10_0
+                .Where(d => d.Title.Similar("animals"))
+                .Take(2);
+#if NET8_0_OR_GREATER
             var result = query.ToList();
             Assert.That(result.Count, Is.LessThanOrEqualTo(2));
 #else
@@ -303,14 +304,14 @@ namespace Lucene.Net.Linq.Tests.Integration
         }
 
         [Test]
-        public void Similar_WithDefaultK()
+        public void Similar_WithoutTake_DefaultsTo10()
         {
-            // Default k=10, but we only have 5 documents
+            // We only have 5 documents, so all should be returned
             var query = Documents
-                .Where(d => d.Title.Similar("test query", 5));
-#if NET10_0
+                .Where(d => d.Title.Similar("test query"));
+#if NET8_0_OR_GREATER
             var result = query.ToList();
-            Assert.That(result.Count, Is.LessThanOrEqualTo(5));
+            Assert.That(result.Count, Is.EqualTo(5));
 #else
             Assert.Throws<InvalidOperationException>(() => query.ToList());
 #endif
@@ -319,29 +320,29 @@ namespace Lucene.Net.Linq.Tests.Integration
         [Test]
         public void Similar_CombinedWithTextFilter()
         {
+            // Hybrid query: filter first, then rank by vector similarity
             var query = Documents
-                .Where(d => d.Title.Similar("furry animals in nature", 5) && d.Category == "animals");
-#if NET10_0
-            // Hybrid query: vector similarity + exact category filter
+                .Where(d => d.Title.Similar("furry animals in nature") && d.Category == "animals");
+#if NET8_0_OR_GREATER
             var result = query.ToList();
             Assert.That(result, Is.Not.Empty);
             Assert.That(result.All(d => d.Category == "animals"), Is.True,
                 "All results should match the category filter");
 #else
-            // Without a real embedding generator, the Similar() part won't work, but we can at least verify the query executes
             Assert.Throws<InvalidOperationException>(() => query.ToList());
 #endif
         }
 
         [Test]
-        public void Similar_WithTake()
+        public void Similar_CombinedWithTextFilter_AndTake()
         {
             var query = Documents
-                .Where(d => d.Title.Similar("test", 5))
+                .Where(d => d.Title.Similar("furry animals in nature") && d.Category == "animals")
                 .Take(2);
-#if NET10_0
+#if NET8_0_OR_GREATER
             var result = query.ToList();
             Assert.That(result.Count, Is.LessThanOrEqualTo(2));
+            Assert.That(result.All(d => d.Category == "animals"), Is.True);
 #else
             Assert.Throws<InvalidOperationException>(() => query.ToList());
 #endif
@@ -366,16 +367,20 @@ namespace Lucene.Net.Linq.Tests.Integration
         [Test]
         public void Similar_NullQueryText_ThrowsInvalidOperationException()
         {
+#if NET8_0_OR_GREATER
             string nullText = null;
             Assert.Throws<InvalidOperationException>(() =>
                 Documents.Where(d => d.Title.Similar(nullText)).ToList());
+#endif
         }
 
         [Test]
         public void Similar_EmptyQueryText_ThrowsInvalidOperationException()
         {
+#if NET8_0_OR_GREATER
             Assert.Throws<InvalidOperationException>(() =>
                 Documents.Where(d => d.Title.Similar("")).ToList());
+#endif
         }
 
         [Test]

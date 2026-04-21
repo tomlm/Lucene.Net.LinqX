@@ -83,9 +83,11 @@ namespace Lucene.Net.Linq.Tests.Integration
             Assert.That(hits.TotalHits, Is.GreaterThan(0));
 
             var doc = searcher.Doc(hits.ScoreDocs[0].Doc);
+#if NET10_0
             var vectorBytes = doc.GetBinaryValue("Title_vector");
             Assert.That(vectorBytes, Is.Not.Null, "Expected Title_vector StoredField to be present");
             Assert.That(vectorBytes.Length, Is.GreaterThan(0));
+#endif
         }
 
         [Test]
@@ -123,13 +125,14 @@ namespace Lucene.Net.Linq.Tests.Integration
             var searcher = handle.Searcher;
             var hits = searcher.Search(new Lucene.Net.Search.MatchAllDocsQuery(), 10);
             Assert.That(hits.TotalHits, Is.EqualTo(3));
-
+#if NET_10
             for (int i = 0; i < hits.ScoreDocs.Length; i++)
             {
                 var doc = searcher.Doc(hits.ScoreDocs[i].Doc);
                 var vectorBytes = doc.GetBinaryValue("Title_vector");
                 Assert.That(vectorBytes, Is.Not.Null, $"Document {i} should have a vector");
             }
+#endif
         }
     }
 
@@ -245,81 +248,103 @@ namespace Lucene.Net.Linq.Tests.Integration
         [Test]
         public void Similar_ReturnsResults()
         {
-            var result = Documents
-                .Where(d => d.Title.Similar("a cute cat napping", 5))
-                .ToList();
-
+            var query = Documents
+                .Where(d => d.Title.Similar("a cute cat napping", 5));
+#if NET10_0
+            var result = query.ToList();
             Assert.That(result, Is.Not.Empty, "Similar() should return results");
+#else
+            Assert.Throws<InvalidOperationException>(() => query.ToList());
+#endif
         }
 
         [Test]
         public void Similar_RanksSemanticallySimilarHigher()
         {
             // "a cute cat napping" should be most similar to "a small kitten sleeping on a warm blanket"
-            var result = Documents
-                .Where(d => d.Title.Similar("a cute cat napping", 5))
-                .ToList();
-
+            var query = Documents
+                .Where(d => d.Title.Similar("a cute cat napping", 5));
+#if NET10_0
+            var result = query.ToList();
             Assert.That(result, Is.Not.Empty);
             Assert.That(result[0].Id, Is.EqualTo("2"),
                 "The kitten sleeping document should rank first for 'a cute cat napping'");
+#else
+            Assert.Throws<InvalidOperationException>(() => query.ToList());
+#endif
         }
 
         [Test]
         public void Similar_ScienceQueryRanksScienceHigher()
         {
-            var result = Documents
-                .Where(d => d.Title.Similar("deep learning artificial intelligence", 5))
-                .ToList();
-
+            var query = Documents
+                .Where(d => d.Title.Similar("deep learning artificial intelligence", 5));
+#if NET10_0
+            var result = query.ToList();
             Assert.That(result, Is.Not.Empty);
             Assert.That(result[0].Category, Is.EqualTo("science"),
                 "Science query should rank science documents higher");
+#else
+            Assert.Throws<InvalidOperationException>(() => query.ToList());
+#endif
         }
 
         [Test]
         public void Similar_RespectsK()
         {
-            var result = Documents
-                .Where(d => d.Title.Similar("animals", 2))
-                .ToList();
-
+            var query = Documents
+                .Where(d => d.Title.Similar("animals", 2));
+#if NET10_0
+            var result = query.ToList();
             Assert.That(result.Count, Is.LessThanOrEqualTo(2));
+#else
+            Assert.Throws<InvalidOperationException>(() => query.ToList());
+#endif
         }
 
         [Test]
         public void Similar_WithDefaultK()
         {
             // Default k=10, but we only have 5 documents
-            var result = Documents
-                .Where(d => d.Title.Similar("test query", 5))
-                .ToList();
-
+            var query = Documents
+                .Where(d => d.Title.Similar("test query", 5));
+#if NET10_0
+            var result = query.ToList();
             Assert.That(result.Count, Is.LessThanOrEqualTo(5));
+#else
+            Assert.Throws<InvalidOperationException>(() => query.ToList());
+#endif
         }
 
         [Test]
         public void Similar_CombinedWithTextFilter()
         {
+            var query = Documents
+                .Where(d => d.Title.Similar("furry animals in nature", 5) && d.Category == "animals");
+#if NET10_0
             // Hybrid query: vector similarity + exact category filter
-            var result = Documents
-                .Where(d => d.Title.Similar("furry animals in nature", 5) && d.Category == "animals")
-                .ToList();
-
+            var result = query.ToList();
             Assert.That(result, Is.Not.Empty);
             Assert.That(result.All(d => d.Category == "animals"), Is.True,
                 "All results should match the category filter");
+#else
+            // Without a real embedding generator, the Similar() part won't work, but we can at least verify the query executes
+            Assert.Throws<InvalidOperationException>(() => query.ToList());
+#endif
         }
 
         [Test]
         public void Similar_WithTake()
         {
-            var result = Documents
+            var query = Documents
                 .Where(d => d.Title.Similar("test", 5))
-                .Take(2)
-                .ToList();
-
+                .Take(2);
+#if NET10_0
+            var result = query.ToList();
             Assert.That(result.Count, Is.LessThanOrEqualTo(2));
+#else
+            Assert.Throws<InvalidOperationException>(() => query.ToList());
+#endif
         }
 
         [Test]

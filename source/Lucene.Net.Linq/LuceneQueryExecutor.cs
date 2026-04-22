@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using Iciclecreek.Lucene.Net.Vector;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Linq.Mapping;
 using Lucene.Net.Linq.ScalarResultHandlers;
+using Lucene.Net.Linq.Search;
 using Lucene.Net.Linq.Search.Function;
 using Lucene.Net.Linq.Transformation;
 using Lucene.Net.Linq.Translation;
@@ -124,7 +126,8 @@ namespace Lucene.Net.Linq
                 var skipResults = luceneQueryModel.SkipResults;
                 var maxResults = Math.Min(luceneQueryModel.MaxResults, searcher.IndexReader.MaxDoc - skipResults);
 
-                var executionContext = new QueryExecutionContext(searcher, luceneQueryModel.Query, luceneQueryModel.Filter);
+                var resolvedQuery = ResolveVectorQueries(luceneQueryModel.Query, searcher.IndexReader, luceneQueryModel.MaxResults);
+                var executionContext = new QueryExecutionContext(searcher, resolvedQuery, luceneQueryModel.Filter);
                 TopFieldDocs hits;
 
                 TimeSpan elapsedPreparationTime;
@@ -212,7 +215,7 @@ namespace Lucene.Net.Linq
                 var searcher = searcherHandle.Searcher;
                 var skipResults = luceneQueryModel.SkipResults;
                 var maxResults = Math.Min(luceneQueryModel.MaxResults, searcher.IndexReader.MaxDoc - skipResults);
-                var query = luceneQueryModel.Query;
+                var query = ResolveVectorQueries(luceneQueryModel.Query, searcher.IndexReader, luceneQueryModel.MaxResults);
 
                 var scoreFunction = luceneQueryModel.GetCustomScoreFunction<TDocument>();
                 if (scoreFunction != null)
@@ -484,14 +487,84 @@ namespace Lucene.Net.Linq
 
         private LuceneQueryModel PrepareQuery(QueryModel queryModel)
         {
-            QueryModelTransformer.TransformQueryModel(queryModel);
+            QueryModelTransformer.TransformQueryModel(queryModel, context.Settings.EmbeddingGenerator);
 
             var builder = new QueryModelTranslator(this, context);
             builder.Build(queryModel);
-            
+
             Log.LogDebug("Lucene query: {Model}", builder.Model);
 
             return builder.Model;
+        }
+
+        /// <summary>
+        /// Walks a query tree and resolves vector queries.
+        /// <list type="bullet">
+        ///   <item><b>Pure vector query</b>: resolved via HNSW KNN with K = maxResults (from Take).</item>
+        ///   <item><b>Hybrid query</b> (vector + filter predicates): the filter predicates
+        ///     execute first and matching documents are ranked by cosine similarity
+        ///     against the query vector — no HNSW needed.</item>
+        /// </list>
+        /// </summary>
+        internal Query ResolveVectorQueries(Query query, IndexReader reader, int maxResults)
+        {
+            if (query is DeferredVectorQuery deferred)
+            {
+                // Pure vector query — use HNSW on NET10, brute-force cosine on downlevel
+                var vectorFieldInfo = LookupVectorFieldInfo(deferred.Field);
+                return deferred.Resolve(reader, maxResults, vectorFieldInfo);
+            }
+
+            if (query is BooleanQuery booleanQuery)
+            {
+                var clauses = booleanQuery.GetClauses();
+
+                // Check for hybrid: vector + non-vector clauses
+                DeferredVectorQuery vectorClause = null;
+                BooleanQuery filterClauses = null;
+
+                foreach (var clause in clauses)
+                {
+                    if (clause.Query is DeferredVectorQuery dkv)
+                    {
+                        vectorClause = dkv;
+                    }
+                    else
+                    {
+                        if (filterClauses == null) filterClauses = new BooleanQuery();
+                        filterClauses.Add(clause);
+                    }
+                }
+
+                if (vectorClause != null && filterClauses != null)
+                {
+                    // Hybrid: filter drives the match set, cosine similarity drives ranking.
+                    return new VectorScoreQuery(
+                        filterClauses, vectorClause.Field, vectorClause.QueryVector);
+                }
+
+                // No hybrid — recurse into nested BooleanQueries
+                var resolved = new BooleanQuery();
+                foreach (var clause in clauses)
+                {
+                    var resolvedQuery = ResolveVectorQueries(clause.Query, reader, maxResults);
+                    resolved.Add(resolvedQuery, clause.Occur);
+                }
+                resolved.Boost = booleanQuery.Boost;
+                return resolved;
+            }
+
+            return query;
+        }
+
+        private Mapping.IVectorFieldMappingInfo LookupVectorFieldInfo(string vectorFieldName)
+        {
+            // Vector field is named "{Property}_vector"; strip suffix to find the property.
+            var propertyName = vectorFieldName.EndsWith("_vector")
+                ? vectorFieldName.Substring(0, vectorFieldName.Length - "_vector".Length)
+                : vectorFieldName;
+            var mapping = GetMappingInfo(propertyName);
+            return mapping as Mapping.IVectorFieldMappingInfo;
         }
 
         protected virtual Expression<Func<TDocument, T>> GetProjector<T>(QueryModel queryModel)

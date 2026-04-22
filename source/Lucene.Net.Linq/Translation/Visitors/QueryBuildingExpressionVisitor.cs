@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -114,6 +114,17 @@ namespace Lucene.Net.Linq.Translation.Visitors
             queries.Push(booleanQuery);
 
             return base.VisitLuceneQueryPredicateExpression(expression);
+        }
+
+        protected override Expression VisitLuceneVectorQueryExpression(LuceneVectorQueryExpression expression)
+        {
+            var deferred = new DeferredVectorQuery(expression.FieldName, expression.QueryVector);
+
+            var booleanQuery = new BooleanQuery();
+            booleanQuery.Add(deferred, Occur.MUST);
+            queries.Push(booleanQuery);
+
+            return expression;
         }
 
         protected override Expression VisitLuceneRangeQueryExpression(LuceneRangeQueryExpression expression)

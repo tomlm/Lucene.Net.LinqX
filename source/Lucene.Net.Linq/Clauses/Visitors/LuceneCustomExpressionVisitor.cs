@@ -38,6 +38,11 @@ namespace Lucene.Net.Linq.Clauses.Visitors
                 return VisitBoostBinaryExpression((BoostBinaryExpression) expression);
             }
 
+            if (expression is LuceneVectorQueryExpression)
+            {
+                return VisitLuceneVectorQueryExpression((LuceneVectorQueryExpression) expression);
+            }
+
             return base.VisitExtension(expression);
         }
 
@@ -91,6 +96,11 @@ namespace Lucene.Net.Linq.Clauses.Visitors
         }
 
         protected virtual Expression VisitLuceneQueryFieldExpression(LuceneQueryFieldExpression expression)
+        {
+            return expression;
+        }
+
+        protected virtual Expression VisitLuceneVectorQueryExpression(LuceneVectorQueryExpression expression)
         {
             return expression;
         }

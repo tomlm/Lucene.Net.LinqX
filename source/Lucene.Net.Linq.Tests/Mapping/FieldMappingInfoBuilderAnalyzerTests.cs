@@ -1,17 +1,21 @@
-﻿using System;
-using Lucene.Net.Analysis;
+#if NET8_0_OR_GREATER
+using ElBruno.LocalEmbeddings;
+using ElBruno.LocalEmbeddings.Options;
+#endif
 using Lucene.Net.Analysis.Core;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Linq.Analysis;
 using Lucene.Net.Linq.Mapping;
 using NUnit.Framework;
+using System;
 using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq.Tests.Mapping
 {
     [TestFixture]
-    public class FieldMappingInfoBuilderAnalyzerTests
+    public class FieldMappingInfoBuilderAnalyzerTests 
     {
+
         public String Simple { get; set; }
 
         [Test]
@@ -23,7 +27,8 @@ namespace Lucene.Net.Linq.Tests.Mapping
                 .Build<FieldMappingInfoBuilderAnalyzerTests>(
                     GetType().GetProperty("Simple"),
                     Version.LUCENE_48,
-                    externalAnalyzer);
+                    externalAnalyzer: externalAnalyzer,
+                    embeddingGenerator: SearchFixture.Generator);
 
             Assert.That(mapper.Analyzer, Is.SameAs(externalAnalyzer));
         }
@@ -120,7 +125,8 @@ namespace Lucene.Net.Linq.Tests.Mapping
                     GetType()
                     .GetProperty(propertyName),
                     Version.LUCENE_48,
-                    null);
+                    externalAnalyzer: null,
+                    embeddingGenerator: SearchFixture.Generator);
         }
     }
 }

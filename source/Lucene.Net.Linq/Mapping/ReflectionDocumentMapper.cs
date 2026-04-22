@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
 using Lucene.Net.Linq.Util;
+using Microsoft.Extensions.AI;
 using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq.Mapping
@@ -41,6 +42,27 @@ namespace Lucene.Net.Linq.Mapping
         {
         }
 
+        /// <summary>
+        /// Constructs an instance with an externally supplied analyzer,
+        /// version, and embedding generator for vector fields.
+        /// </summary>
+        public ReflectionDocumentMapper(Version version, Analyzer externalAnalyzer,
+            IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator)
+            : this(version, externalAnalyzer, typeof(T), embeddingGenerator)
+        {
+        }
+
+        private ReflectionDocumentMapper(Version version, Analyzer externalAnalyzer, Type type,
+            IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator)
+            : base(version, externalAnalyzer)
+        {
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            BuildFieldMap(props, embeddingGenerator);
+
+            BuildKeyFieldMap(type, props);
+        }
+
         private ReflectionDocumentMapper(Version version, Analyzer externalAnalyzer, Type type)
             : base(version, externalAnalyzer)
         {
@@ -51,6 +73,26 @@ namespace Lucene.Net.Linq.Mapping
             BuildKeyFieldMap(type, props);
         }
 
+        private void BuildFieldMap(IEnumerable<PropertyInfo> props,
+            IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator)
+        {
+            foreach (var p in props)
+            {
+                if (p.GetCustomAttribute<IgnoreFieldAttribute>(true) != null)
+                {
+                    continue;
+                }
+                var mappingContext = FieldMappingInfoBuilder.Build<T>(p, version, externalAnalyzer, embeddingGenerator);
+
+                fieldMap.Add(mappingContext.PropertyName, mappingContext);
+
+                if (!string.IsNullOrWhiteSpace(mappingContext.FieldName) && mappingContext.Analyzer != null)
+                {
+                    analyzer.AddAnalyzer(mappingContext.FieldName, mappingContext.Analyzer);
+                }
+            }
+        }
+
         private void BuildFieldMap(IEnumerable<PropertyInfo> props)
         {
             foreach (var p in props)
@@ -59,8 +101,8 @@ namespace Lucene.Net.Linq.Mapping
                 {
                     continue;
                 }
-                var mappingContext = FieldMappingInfoBuilder.Build<T>(p, version, externalAnalyzer);
-                
+                var mappingContext = FieldMappingInfoBuilder.Build<T>(p, version, externalAnalyzer, null);
+
                 fieldMap.Add(mappingContext.PropertyName, mappingContext);
 
                 if (!string.IsNullOrWhiteSpace(mappingContext.FieldName) && mappingContext.Analyzer != null)

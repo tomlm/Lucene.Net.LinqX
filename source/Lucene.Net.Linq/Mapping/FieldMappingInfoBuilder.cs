@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Reflection;
@@ -8,6 +8,7 @@ using Lucene.Net.Linq.Analysis;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Linq.Converters;
 using Lucene.Net.Linq.Util;
+using Microsoft.Extensions.AI;
 using DateTimeConverter = Lucene.Net.Linq.Converters.DateTimeConverter;
 using Version = Lucene.Net.Util.LuceneVersion;
 
@@ -19,10 +20,11 @@ namespace Lucene.Net.Linq.Mapping
 
         internal static IFieldMapper<T> Build<T>(PropertyInfo p)
         {
-            return Build<T>(p, Version.LUCENE_48, null);
+            return Build<T>(p, Version.LUCENE_48, null, null);
         }
 
-        internal static IFieldMapper<T> Build<T>(PropertyInfo p, Version version, Analyzer externalAnalyzer)
+        internal static IFieldMapper<T> Build<T>(PropertyInfo p, Version version, Analyzer externalAnalyzer,
+            IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator)
         {
             var score = p.GetCustomAttribute<QueryScoreAttribute>(true);
 
@@ -33,6 +35,7 @@ namespace Lucene.Net.Linq.Mapping
 
             var metadata = p.GetCustomAttribute<FieldAttribute>(true);
             var numericFieldAttribute = p.GetCustomAttribute<NumericFieldAttribute>(true);
+            var vectorFieldAttribute = p.GetCustomAttribute<VectorFieldAttribute>(true);
             Type type;
 
             var isCollection = IsCollection(p.PropertyType, out type);
@@ -46,6 +49,11 @@ namespace Lucene.Net.Linq.Mapping
             else
             {
                 mapper = BuildPrimitive<T>(p, type, metadata, version, externalAnalyzer, isCollection);
+            }
+
+            if (vectorFieldAttribute != null)
+            {
+                return new VectorFieldMapper<T>(mapper, p, vectorFieldAttribute, embeddingGenerator);
             }
 
             return isCollection ? new CollectionReflectionFieldMapper<T>(mapper, type) : mapper;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -132,6 +132,20 @@ namespace Lucene.Net.Linq
         /// <param name="queryPattern"></param>
         /// <returns></returns>
         public static T AllowSpecialCharacters<T>(this T queryPattern)
+        {
+            throw new InvalidOperationException(UnreachableCode);
+        }
+
+        /// <summary>
+        /// Performs vector similarity search on a string property that has been
+        /// configured with <see cref="Mapping.VectorFieldAttribute"/> or via the
+        /// fluent <c>AsVectorField()</c> API. The <paramref name="queryText"/> is
+        /// embedded at query time and a KNN search is executed against the vector
+        /// index. Use <c>.Take(n)</c> on the query to limit results.
+        /// </summary>
+        /// <param name="property">The string property to search (must have a vector field configured).</param>
+        /// <param name="queryText">The text to embed and search for similar documents.</param>
+        public static bool Similar(this string property, string queryText)
         {
             throw new InvalidOperationException(UnreachableCode);
         }

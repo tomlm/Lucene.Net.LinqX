@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Lucene.Net.Analysis;
@@ -162,7 +162,7 @@ namespace Lucene.Net.Linq
         /// <typeparam name="T">The type of document that queries will be built against.</typeparam>
         public FieldMappingQueryParser<T> CreateQueryParser<T>()
         {
-            var mapper = new ReflectionDocumentMapper<T>(version, externalAnalyzer);
+            var mapper = CreateReflectionMapper<T>();
             var defaultSearchField = mapper.KeyProperties.FirstOrDefault() ?? mapper.IndexedProperties.FirstOrDefault();
             return new FieldMappingQueryParser<T>(version, defaultSearchField, mapper);
         }
@@ -181,7 +181,7 @@ namespace Lucene.Net.Linq
         /// <returns></returns>
         public FieldMappingQueryParser<T> CreateQueryParser<T>(string defaultSearchField)
         {
-            var mapper = new ReflectionDocumentMapper<T>(version, externalAnalyzer);
+            var mapper = CreateReflectionMapper<T>();
             return new FieldMappingQueryParser<T>(version, defaultSearchField, mapper);
         }
 
@@ -222,7 +222,7 @@ namespace Lucene.Net.Linq
         /// </summary>
         public IQueryable<T> AsQueryable<T>(ObjectLookup<T> lookup)
         {
-            return AsQueryable(lookup, new ReflectionDocumentMapper<T>(version, externalAnalyzer));
+            return AsQueryable(lookup, CreateReflectionMapper<T>());
         }
 
         /// <summary>
@@ -252,7 +252,7 @@ namespace Lucene.Net.Linq
         /// </summary>
         public IEnumerable<string> GetIndexedPropertyNames<T>()
         {
-            return new ReflectionDocumentMapper<T>(version, externalAnalyzer).IndexedProperties;
+            return CreateReflectionMapper<T>().IndexedProperties;
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace Lucene.Net.Linq
         /// </summary>
         public ISession<T> OpenSession<T>(ObjectLookup<T> lookup)
         {
-            var reflectionDocumentMapper = new ReflectionDocumentMapper<T>(version, externalAnalyzer);
+            var reflectionDocumentMapper = CreateReflectionMapper<T>();
 
             return OpenSession(lookup, reflectionDocumentMapper, reflectionDocumentMapper);
         }
@@ -392,7 +392,7 @@ namespace Lucene.Net.Linq
         /// </summary>
         public void RegisterCacheWarmingCallback<T>(Action<IQueryable<T>> callback, ObjectLookup<T> lookup)
         {
-            RegisterCacheWarmingCallback(callback, lookup, new ReflectionDocumentMapper<T>(version, null));
+            RegisterCacheWarmingCallback(callback, lookup, CreateReflectionMapper<T>());
         }
 
         /// <summary>
@@ -551,6 +551,11 @@ namespace Lucene.Net.Linq
         internal PerFieldAnalyzer Analyzer
         {
             get { return perFieldAnalyzer; }
+        }
+
+        private ReflectionDocumentMapper<T> CreateReflectionMapper<T>()
+        {
+            return new ReflectionDocumentMapper<T>(version, externalAnalyzer, Settings.EmbeddingGenerator);
         }
     }
 }

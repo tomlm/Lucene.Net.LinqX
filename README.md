@@ -1,4 +1,7 @@
-## LINQ to Lucene Modernized for Lucene.Net 4.8 and .NET 8
+[![Build and Test](https://github.com/tomlm/Iciclecreek.Lucene.Net.Linq/actions/workflows/BuildAndRunTests.yml/badge.svg)](https://github.com/tomlm/Iciclecreek.Lucene.Net.Linq/actions/workflows/BuildAndRunTests.yml)
+[![NuGet](https://img.shields.io/nuget/v/Iciclecreek.Lucene.Net.Linq.svg)](https://www.nuget.org/packages/Iciclecreek.Lucene.Net.Linq)
+
+## LINQ to Lucene Modernized for Lucene.Net 4.8 and .NET 8+
 
 Iciclecreek.Lucene.Net.Linq is a .NET library that enables LINQ queries to run natively on a Lucene.Net index.
 
@@ -13,7 +16,7 @@ run the following command in the [Package Manager Console](http://docs.nuget.org
 
 This branch ports the Lucene.Net.Linq library from the original `Lucene.Net.Linq 3.0.3` /
 `net40` baseline onto `Lucene.Net 4.8.0-beta00017` and SDK-style projects
-multi-targeting `netstandard2.0;net8.0`. Highlights:
+multi-targeting `netstandard2.0;net8.0;net10.0`. Highlights:
 
 - **Lucene.Net 4.8.0-beta00017** for the index, query, analysis, and
   query-parser packages.
@@ -25,10 +28,9 @@ multi-targeting `netstandard2.0;net8.0`. Highlights:
 
 ### New 4.x features
 
-- **Multi-targeting**: the library builds for `netstandard2.0` and
-  `net8.0`; the test project multi-targets `net48;net8.0` so the
-  netstandard build is exercised at runtime on classic .NET Framework
-  as well as modern .NET.
+- **Vector similarity search** via `.Similar()` with automatic embedding at index and query time
+- **Multi-targeting**: the library builds for `netstandard2.0`, `net8.0`,
+  and `net10.0`; 
 - **Polymorphic select** - searching for a base type always properly instantiated object types of the original type.
 - **JOIN** LINQ join support utilizes search index to query across document types 
 - **DocValues opt-in** (`[Field(DocValues = true)]` /
@@ -41,6 +43,7 @@ multi-targeting `netstandard2.0;net8.0`. Highlights:
   beta lacks `SortedNumericDocValuesField`.
 
 ### Features
+* **Vector similarity search** via `.Similar()` with automatic embedding at index and query time
 * Automatically converts PONOs to Documents and back
 * Add, delete and update documents in atomic transaction
 * Unit of Work pattern automatically tracks and flushes updated documents
@@ -298,6 +301,7 @@ at translation time with a clear message.
 | `Any()` / `Any(predicate)` | `TotalHits > 0` |
 | `Count()` / `LongCount()` | `TotalHits` |
 | `Min` / `Max` | `Sort` ascending/descending + `Take(1)` |
+| `Where(d => d.Field.Similar("text"))` | `VectorQuery` (KNN or cosine similarity) |
 | `Select(d => new { ... })` | Document projection (read only the fields you reference) |
 
 ### Collection Contains ("IN" queries)
@@ -532,11 +536,90 @@ The library logs query translation steps, cache reload events, and
 session commit summaries. Defaults to `NullLoggerFactory` if you
 don't set one.
 
-## Note on Performance
+## Vector Similarity Search
 
-Every query includes a type field to ensure
-that multiple entity types can safely share a single index. This is a
-lightweight `TermQuery` that Lucene evaluates efficiently as a filter.
+The library supports vector similarity search. String properties can
+opt in via `[VectorField]` or the fluent `.AsVectorField()` API. Embeddings
+are automatically computed at index time and ranked by similarity at
+query time using `.Similar()`.
+
+### Configuring an embedding generator
+
+Vector search requires an `IEmbeddingGenerator<string, Embedding<float>>`
+(from `Microsoft.Extensions.AI`). Any implementation works --
+OpenAI, Azure OpenAI, Ollama, or a local model. For local / offline
+scenarios, [ElBruno.LocalEmbeddings](https://nuget.org/packages/ElBruno.LocalEmbeddings)
+is a good choice -- under 20 MB and works great offline:
+
+```csharp
+using ElBruno.LocalEmbeddings;
+using ElBruno.LocalEmbeddings.Options;
+
+var generator = new LocalEmbeddingGenerator(new LocalEmbeddingsOptions
+{
+    ModelName = "SmartComponents/bge-micro-v2",
+    PreferQuantized = true
+});
+
+var provider = new LuceneDataProvider(directory, LuceneVersion.LUCENE_48);
+provider.Settings.EmbeddingGenerator = generator;
+```
+
+### Attribute mapping
+
+Add `[VectorField]` alongside `[Field]` on any string property:
+
+```csharp
+public class Article
+{
+    [Field(Key = true)]
+    public string Id { get; set; }
+
+    [Field, VectorField]
+    public string Title { get; set; }
+
+    [Field]
+    public string Category { get; set; }
+}
+```
+
+### Fluent mapping
+
+```csharp
+public class ArticleMap : ClassMap<Article>
+{
+    public ArticleMap() : base(LuceneVersion.LUCENE_48)
+    {
+        Key(a => a.Id);
+        Property(a => a.Title).AsVectorField();
+    }
+}
+```
+
+### Querying with `.Similar()`
+
+Use `.Similar()` inside a `Where` clause to rank results by
+similarity. Use `.Take()` to limit how many come back:
+
+```csharp
+var results = provider.AsQueryable<Article>()
+    .Where(a => a.Title.Similar("a cute cat napping"))
+    .Take(5)
+    .ToList();
+```
+
+`.Similar()` composes naturally with other predicates. Filters are
+applied first, then matching documents are ranked by similarity:
+
+```csharp
+// Only animals, ranked by similarity
+var results = provider.AsQueryable<Article>()
+    .Where(a => a.Title.Similar("furry animals") && a.Category == "animals")
+    .Take(3)
+    .ToList();
+```
+
+
 
 ## Integration with OData
 
@@ -645,7 +728,7 @@ directory; do not point the new library at an old index.
    The package id changed from `Lucene.Net.Linq` to `Iciclecreek.Lucene.Net.Linq`
    to disambiguate this fork from the dormant original.
 
-2. Retarget. The library is `netstandard2.0;net8.0`. .NET Framework 4.8
+2. Retarget. The library is `netstandard2.0;net8.0;net10.0`. .NET Framework 4.6.1+
    consumers are supported via netstandard2.0; net40–net46 consumers are
    not.
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Reflection;
 using Lucene.Net.Analysis;
@@ -50,6 +50,19 @@ namespace Lucene.Net.Linq.Fluent
         {
             this.fieldName = fieldName;
             return this;
+        }
+
+        /// <summary>
+        /// Configure the property as a vector embedding field for KNN
+        /// similarity search. The string value is automatically embedded
+        /// and stored as a companion <c>BinaryDocValuesField</c>.
+        /// </summary>
+        public VectorPropertyMap<T> AsVectorField()
+        {
+            if (this is VectorPropertyMap<T>) return (VectorPropertyMap<T>)this;
+            var vectorPart = new VectorPropertyMap<T>(classMap, propInfo, this);
+            classMap.AddProperty(vectorPart);
+            return vectorPart;
         }
 
         /// <summary>

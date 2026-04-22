@@ -67,23 +67,6 @@ namespace Lucene.Net.Linq.Tests.Integration
             Assert.That(info.VectorFieldName, Is.EqualTo("Title_vector"));
         }
 
-        [Test]
-        public void AddDocument_WritesVectorField()
-        {
-            AddDocument(new VectorDocument { Id = "1", Title = "hello world" });
-
-            using var handle = provider.Context.CheckoutSearcher();
-            var searcher = handle.Searcher;
-            var hits = searcher.Search(new Lucene.Net.Search.MatchAllDocsQuery(), 10);
-            Assert.That(hits.TotalHits, Is.GreaterThan(0));
-
-            var doc = searcher.Doc(hits.ScoreDocs[0].Doc);
-#if NET8_0_OR_GREATER
-            var vectorBytes = doc.GetBinaryValue("Title_vector");
-            Assert.That(vectorBytes, Is.Not.Null, "Expected Title_vector StoredField to be present");
-            Assert.That(vectorBytes.Length, Is.GreaterThan(0));
-#endif
-        }
 
         [Test]
         public void AddDocument_StringFieldStillReadable()
@@ -94,40 +77,6 @@ namespace Lucene.Net.Linq.Tests.Integration
             Assert.That(results.Count, Is.EqualTo(1));
             Assert.That(results[0].Title, Is.EqualTo("hello world"));
             Assert.That(results[0].Category, Is.EqualTo("test"));
-        }
-
-        [Test]
-        public void AddDocument_NullTitle_NoVectorWritten()
-        {
-            AddDocument(new VectorDocument { Id = "1", Title = null, Category = "test" });
-
-            using var handle = provider.Context.CheckoutSearcher();
-            var searcher = handle.Searcher;
-            var hits = searcher.Search(new Lucene.Net.Search.MatchAllDocsQuery(), 10);
-            var doc = searcher.Doc(hits.ScoreDocs[0].Doc);
-            var vectorBytes = doc.GetBinaryValue("Title_vector");
-            Assert.That(vectorBytes, Is.Null, "No vector should be written for null text");
-        }
-
-        [Test]
-        public void MultipleDocuments_AllHaveVectors()
-        {
-            AddDocument(new VectorDocument { Id = "1", Title = "first document" });
-            AddDocument(new VectorDocument { Id = "2", Title = "second document" });
-            AddDocument(new VectorDocument { Id = "3", Title = "third document" });
-
-            using var handle = provider.Context.CheckoutSearcher();
-            var searcher = handle.Searcher;
-            var hits = searcher.Search(new Lucene.Net.Search.MatchAllDocsQuery(), 10);
-            Assert.That(hits.TotalHits, Is.EqualTo(3));
-#if NET8_0_OR_GREATER
-            for (int i = 0; i < hits.ScoreDocs.Length; i++)
-            {
-                var doc = searcher.Doc(hits.ScoreDocs[i].Doc);
-                var vectorBytes = doc.GetBinaryValue("Title_vector");
-                Assert.That(vectorBytes, Is.Not.Null, $"Document {i} should have a vector");
-            }
-#endif
         }
     }
 

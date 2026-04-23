@@ -1,9 +1,10 @@
 [![Build and Test](https://github.com/tomlm/Iciclecreek.Lucene.Net.Linq/actions/workflows/BuildAndRunTests.yml/badge.svg)](https://github.com/tomlm/Iciclecreek.Lucene.Net.Linq/actions/workflows/BuildAndRunTests.yml)
 [![NuGet](https://img.shields.io/nuget/v/Iciclecreek.Lucene.Net.Linq.svg)](https://www.nuget.org/packages/Iciclecreek.Lucene.Net.Linq)
 
-## LINQ to Lucene Modernized for Lucene.Net 4.8 and .NET 8+
-
+## LINQ to Lucene
 Iciclecreek.Lucene.Net.Linq is a .NET library that enables LINQ queries to run natively on a Lucene.Net index.
+
+> This is a fork of the excellent library [Lucene.Net.Linq](http://github.com/chriseldredge/Lucene.Net.Linq) which has been fully Modernized for Lucene.Net 4.x and .NET 8+
 
 ## Installation
 

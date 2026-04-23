@@ -301,7 +301,8 @@ at translation time with a clear message.
 | `Any()` / `Any(predicate)` | `TotalHits > 0` |
 | `Count()` / `LongCount()` | `TotalHits` |
 | `Min` / `Max` | `Sort` ascending/descending + `Take(1)` |
-| `Where(d => d.Field.Similar("text"))` | `VectorQuery` (KNN or cosine similarity) |
+| `Where(d => d.Field.Similar("text"))` | `VectorQuery` on field (KNN or cosine similarity) |
+| `Where(d => d.Similar("text"))` | `VectorQuery` on content field (KNN or cosine similarity) |
 | `Select(d => new { ... })` | Document projection (read only the fields you reference) |
 
 ### Collection Contains ("IN" queries)
@@ -598,8 +599,7 @@ public class ArticleMap : ClassMap<Article>
 
 ### Querying with `.Similar()`
 
-Use `.Similar()` inside a `Where` clause to rank results by
-similarity. Use `.Take()` to limit how many come back:
+**Property-level** -- search against a specific field's embeddings:
 
 ```csharp
 var results = provider.AsQueryable<Article>()
@@ -608,8 +608,18 @@ var results = provider.AsQueryable<Article>()
     .ToList();
 ```
 
-`.Similar()` composes naturally with other predicates. Filters are
-applied first, then matching documents are ranked by similarity:
+**Object-level** -- search against a default content field (e.g. a combined
+content field that aggregates all text properties). 
+
+```csharp
+var results = provider.AsQueryable<Article>()
+    .Where(a => a.Similar("machine learning breakthroughs"))
+    .Take(5)
+    .ToList();
+```
+
+**Hybrid** -- `.Similar()` composes naturally with other predicates. Filters
+are applied first, then matching documents are ranked by similarity:
 
 ```csharp
 // Only animals, ranked by similarity

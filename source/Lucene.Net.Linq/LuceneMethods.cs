@@ -150,6 +150,18 @@ namespace Lucene.Net.Linq
             throw new InvalidOperationException(UnreachableCode);
         }
 
+        /// <summary>
+        /// Performs vector similarity search against the default content field.
+        /// The <paramref name="queryText"/> is embedded at query time and a KNN
+        /// search is executed against the content vector index.
+        /// </summary>
+        /// <param name="obj">The mapped document (used to target the content field).</param>
+        /// <param name="queryText">The text to embed and search for similar documents.</param>
+        public static bool Similar<T>(this T obj, string queryText)
+        {
+            throw new InvalidOperationException(UnreachableCode);
+        }
+
         internal static bool Matches<T>(Query query, T item)
         {
             throw new InvalidOperationException(UnreachableCode);

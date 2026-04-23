@@ -74,6 +74,7 @@ namespace Lucene.Net.Linq.Transformation
             {
                 new SubQueryContainsVisitor(),
                 new LuceneExtensionMethodCallVisitor(),
+                new SimilarMethodCallVisitor(embeddingGenerator),
                 new ExternallyProvidedQueryExpressionVisitor(),
                 new QuerySourceReferencePropertyTransformingVisitor(),
                 new BoostMethodCallVisitor(0),
@@ -91,7 +92,6 @@ namespace Lucene.Net.Linq.Transformation
                 new AllowSpecialCharactersMethodExpressionVisitor(),
                 new BoostMethodCallVisitor(1),
                 new FuzzyMethodCallVisitor(),
-                new SimilarMethodCallVisitor(embeddingGenerator),
             };
             var orderingVisitors = new LuceneExpressionVisitor[]
             {

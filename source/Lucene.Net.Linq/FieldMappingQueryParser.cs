@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Lucene.Net.Analysis;
 using Lucene.Net.Linq.Mapping;
 using Lucene.Net.Linq.Search;
 using Lucene.Net.QueryParsers.Classic;
@@ -8,29 +9,23 @@ using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace Lucene.Net.Linq
 {
-    public class FieldMappingQueryParser<T> : QueryParser
+    /// <summary>
+    /// Non-generic query parser that resolves field names via <see cref="IFieldMappingInfoProvider"/>.
+    /// Use this when you have field mapping info but no CLR type (e.g. dynamic/schema-defined documents).
+    /// </summary>
+    public class FieldMappingQueryParser : QueryParser
     {
         private readonly Version matchVersion;
-        private readonly IDocumentMapper<T> mapper;
+        private readonly IFieldMappingInfoProvider mappingInfo;
         private readonly string initialDefaultField;
-        private static readonly string DefaultField = typeof(FieldMappingQueryParser<T>).FullName + ".DEFAULT_FIELD";
 
-        public FieldMappingQueryParser(Version matchVersion, IDocumentMapper<T> mapper)
-            : base(matchVersion, DefaultField, mapper.Analyzer)
-        {
-            this.initialDefaultField = DefaultField;
-            this.matchVersion = matchVersion;
-            this.mapper = mapper;
-            this.DefaultSearchProperty = DefaultField;
-        }
-
-        public FieldMappingQueryParser(Version matchVersion, string defaultSearchField, IDocumentMapper<T> mapper)
-            : base(matchVersion, defaultSearchField, mapper.Analyzer)
+        public FieldMappingQueryParser(Version matchVersion, string defaultSearchField, Analyzer analyzer, IFieldMappingInfoProvider mappingInfo)
+            : base(matchVersion, defaultSearchField, analyzer)
         {
             this.initialDefaultField = defaultSearchField;
             this.DefaultSearchProperty = defaultSearchField;
             this.matchVersion = matchVersion;
-            this.mapper = mapper;
+            this.mappingInfo = mappingInfo;
         }
 
         /// <summary>
@@ -43,7 +38,7 @@ namespace Lucene.Net.Linq
 
         public Version MatchVersion => matchVersion;
 
-        public IDocumentMapper<T> DocumentMapper => mapper;
+        public IFieldMappingInfoProvider MappingInfo => mappingInfo;
 
         public override string Field => DefaultSearchProperty;
 
@@ -112,12 +107,36 @@ namespace Lucene.Net.Linq
 
             try
             {
-                return mapper.GetMappingInfo(field);
+                return mappingInfo.GetMappingInfo(field);
             }
             catch (KeyNotFoundException)
             {
                 throw new ParseException("Unrecognized field: '" + field + "'");
             }
         }
+    }
+
+    /// <summary>
+    /// Generic query parser that resolves field names via an <see cref="IDocumentMapper{T}"/>.
+    /// Delegates to the non-generic <see cref="FieldMappingQueryParser"/> for all query logic.
+    /// </summary>
+    public class FieldMappingQueryParser<T> : FieldMappingQueryParser
+    {
+        private static readonly string DefaultField = typeof(FieldMappingQueryParser<T>).FullName + ".DEFAULT_FIELD";
+        private readonly IDocumentMapper<T> mapper;
+
+        public FieldMappingQueryParser(Version matchVersion, IDocumentMapper<T> mapper)
+            : base(matchVersion, DefaultField, mapper.Analyzer, mapper)
+        {
+            this.mapper = mapper;
+        }
+
+        public FieldMappingQueryParser(Version matchVersion, string defaultSearchField, IDocumentMapper<T> mapper)
+            : base(matchVersion, defaultSearchField, mapper.Analyzer, mapper)
+        {
+            this.mapper = mapper;
+        }
+
+        public IDocumentMapper<T> DocumentMapper => mapper;
     }
 }
